@@ -8,8 +8,7 @@
                 <div class="inline-flex items-center justify-center w-16 h-16 bg-primary-container rounded-xl mb-md">
                     <span class="material-symbols-outlined text-on-primary text-3xl" style="font-variation-settings: 'FILL' 1;">lock_reset</span>
                 </div>
-                <h1 class="font-headline-md text-headline-md text-primary mb-xs">Mi Gestor Pro</h1>
-                <p class="font-body-sm text-body-sm text-on-surface-variant">Freelance Workspace</p>
+                <h1 class="font-display-lg text-display-lg text-primary mb-xs">Mi Gestor Pro</h1>
             </div>
 
             <!-- Recovery Card -->

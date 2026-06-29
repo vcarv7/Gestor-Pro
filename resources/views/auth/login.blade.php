@@ -5,10 +5,8 @@
         <main class="w-full max-w-[440px] animate-fade-in">
             <!-- Identity Branding -->
             <div class="flex flex-col items-center mb-xl text-center">
-                <img alt="Mi Gestor Pro Logo" class="w-20 h-20 mb-md object-contain"
-                    src="https://lh3.googleusercontent.com/aida/AP1WRLuXwRZEyWbmcLJdKqiUyGiUHUGeX7oUroccU52w8kl4_7Bpf-Qlrx37Ug0z9-BL5iHXhqnuFEG4xIvJaBCxU8GovhAx6UzpIVHiB5EUd6rvFk8XOTuPISaHYRZ_ZrW1fsbfRvlrwHKZgJlINyZnjYoiBXUVOY0W7vfRPDz3M5x4ETGiUSOFOA_CFnWd6eNJOQcFPQBeB40XttOdwxWPJIYuWs0dECTcNzW1qgo0f4E-1Im4KH51dABulg" />
-                <h1 class="font-headline-md text-headline-md text-primary mb-xs">Mi Gestor Pro</h1>
-                <p class="font-body-md text-body-md text-on-surface-variant">Freelance Workspace</p>
+                <x-logo class="w-20 h-20 mb-md" />
+                <h1 class="font-display-lg text-display-lg text-primary mb-xs">Mi Gestor Pro</h1>
             </div>
 
             <!-- Login Card -->

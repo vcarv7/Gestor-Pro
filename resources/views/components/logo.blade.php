@@ -1,0 +1,8 @@
+@props(['class' => 'w-20 h-20'])
+
+<svg {{ $attributes->merge(['class' => $class]) }} viewBox="0 0 400 400" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <rect width="400" height="400" rx="80" fill="#0f172a"/>
+    <path d="M100 280V120L200 220L300 120V200" stroke="#ffffff" stroke-width="32" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M260 260L300 300L380 200" stroke="#3b82f6" stroke-width="32" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="200" cy="300" r="20" fill="#3b82f6"/>
+</svg>
