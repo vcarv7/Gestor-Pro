@@ -4,10 +4,8 @@
     <div class="auth-container glass-background text-on-surface">
         <main class="w-full max-w-[420px]">
             <!-- Branding Area -->
-            <div class="mb-xl text-center">
-                <div class="inline-flex items-center justify-center w-16 h-16 bg-primary-container rounded-xl mb-md">
-                    <span class="material-symbols-outlined text-on-primary text-3xl" style="font-variation-settings: 'FILL' 1;">lock</span>
-                </div>
+            <div class="flex flex-col items-center mb-xl text-center">
+                <x-logo class="w-20 h-20 mb-md" />
                 <h1 class="font-display-lg text-display-lg text-primary mb-xs">Mi Gestor Pro</h1>
             </div>
 
