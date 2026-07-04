@@ -4,6 +4,8 @@ use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Auth\NewPasswordController;
 use App\Http\Controllers\Auth\PasswordResetLinkController;
 use App\Http\Controllers\ClienteController;
+use App\Http\Controllers\ProyectoController;
+use App\Http\Controllers\TareaController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
@@ -35,12 +37,18 @@ Route::middleware('auth')->group(function () {
     Route::resource('clientes', ClienteController::class);
 
     // ============================================================================
-    // PROYECTOS (mock data)
+    // PROYECTOS (DB real, scope por user_id)
     // ============================================================================
-    Route::prefix('proyectos')->name('proyectos.')->group(function () {
-        Route::get('/', fn() => view('proyectos.index', ['proyectos' => getMockProyectos()]))->name('index');
-        Route::get('/{id}', fn($id) => view('proyectos.show', ['id' => $id, 'proyecto' => getMockProyecto($id)]))->name('show');
-    });
+    Route::resource('proyectos', ProyectoController::class);
+
+    // ============================================================================
+    // TAREAS (anidadas en proyectos, shallow routes)
+    // ============================================================================
+    Route::resource('proyectos.tareas', TareaController::class)->shallow();
+
+    // Bulk delete de tareas (ruta con {proyecto} para autorización)
+    Route::delete('proyectos/{proyecto}/tareas/bulk', [TareaController::class, 'bulkDestroy'])
+        ->name('proyectos.tareas.bulk-destroy');
 
     // ============================================================================
     // AUDITORIA (mock data)
@@ -51,26 +59,8 @@ Route::middleware('auth')->group(function () {
 });
 
 // ============================================================================
-// MOCK DATA HELPERS (solo para proyectos y auditoria)
+// MOCK DATA HELPERS (solo para auditoria)
 // ============================================================================
-function getMockProyectos(): array
-{
-    return [
-        ['id' => 1, 'name' => 'Rediseño Web - Clínica Dental', 'cliente' => 'Clínica Dental Juan Pérez', 'estado' => 'En Progreso', 'fecha_inicio' => '15 Ene 2024', 'fecha_entrega' => '28 Feb 2024', 'tareas_count' => 4, 'tareas_done' => 1],
-        ['id' => 2, 'name' => 'Branding Global', 'cliente' => 'Solstice Design', 'estado' => 'En Progreso', 'fecha_inicio' => '01 Mar 2024', 'fecha_entrega' => '15 Abr 2024', 'tareas_count' => 6, 'tareas_done' => 2],
-        ['id' => 3, 'name' => 'App Finanzas UI', 'cliente' => 'Miller & Co', 'estado' => 'Completado', 'fecha_inicio' => '10 Nov 2023', 'fecha_entrega' => '20 Dic 2023', 'tareas_count' => 8, 'tareas_done' => 8],
-    ];
-}
-
-function getMockProyecto(int $id): array
-{
-    $proyectos = getMockProyectos();
-    foreach ($proyectos as $p) {
-        if ($p['id'] === $id) return $p;
-    }
-    return $proyectos[0];
-}
-
 function getMockActividades(): array
 {
     return [
