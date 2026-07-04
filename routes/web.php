@@ -3,6 +3,7 @@
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Auth\NewPasswordController;
 use App\Http\Controllers\Auth\PasswordResetLinkController;
+use App\Http\Controllers\ClienteController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
@@ -29,14 +30,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/dashboard', fn() => view('dashboard.dashboard'))->name('dashboard');
 
     // ============================================================================
-    // CLIENTES (mock data, sin DB)
+    // CLIENTES (DB real, scope por user_id)
     // ============================================================================
-    Route::prefix('clientes')->name('clientes.')->group(function () {
-        Route::get('/', fn() => view('clientes.index', ['clientes' => getMockClientes()]))->name('index');
-        Route::get('/crear', fn() => view('clientes.create'))->name('create');
-        Route::get('/{id}', fn($id) => view('clientes.show', ['id' => $id, 'cliente' => getMockCliente($id)]))->name('show');
-        Route::get('/{id}/editar', fn($id) => view('clientes.edit', ['id' => $id, 'cliente' => getMockCliente($id)]))->name('edit');
-    });
+    Route::resource('clientes', ClienteController::class);
 
     // ============================================================================
     // PROYECTOS (mock data)
@@ -55,33 +51,8 @@ Route::middleware('auth')->group(function () {
 });
 
 // ============================================================================
-// MOCK DATA HELPERS
+// MOCK DATA HELPERS (solo para proyectos y auditoria)
 // ============================================================================
-function getMockClientes(): array
-{
-    return [
-        ['id' => 1, 'name' => 'Julianne Doe', 'email' => 'j.doe@techsphere.com', 'phone' => '+1 (555) 123-4567', 'company' => 'TECHSPHERE INC', 'notes' => 'VIP client, priority support'],
-        ['id' => 2, 'name' => 'Mark Solstice', 'email' => 'mark@solstice.design', 'phone' => '+1 (555) 987-6543', 'company' => 'SOLSTICE DESIGN', 'notes' => 'Pending invoice approval'],
-        ['id' => 3, 'name' => 'Anita Weaver', 'email' => 'a.weaver@growth.io', 'phone' => '+1 (555) 246-8101', 'company' => 'GROWTH IO', 'notes' => 'New lead from referral'],
-        ['id' => 4, 'name' => 'David Park', 'email' => 'dpark@venter.com', 'phone' => '+1 (555) 000-1000', 'company' => 'VENTER', 'notes' => 'Standard terms'],
-        ['id' => 5, 'name' => 'Elena Fischer', 'email' => 'elena@fischer.at', 'phone' => '+1 (555) 000-1001', 'company' => 'FISCHER GMBH', 'notes' => 'Standard terms'],
-        ['id' => 6, 'name' => 'Samir Al-Fayed', 'email' => 'samir@global.sa', 'phone' => '+1 (555) 000-1002', 'company' => 'GLOBAL TRADINGS', 'notes' => 'Standard terms'],
-        ['id' => 7, 'name' => 'Clara Thorne', 'email' => 'clara@thorney.net', 'phone' => '+1 (555) 000-1003', 'company' => 'THORNEY LEGAL', 'notes' => 'Standard terms'],
-        ['id' => 8, 'name' => 'Liam Hudson', 'email' => 'liam@hudson.co', 'phone' => '+1 (555) 000-1004', 'company' => 'HUDSON MEDIA', 'notes' => 'Standard terms'],
-        ['id' => 9, 'name' => 'Sofia Rossi', 'email' => 's.rossi@italo.it', 'phone' => '+1 (555) 000-1005', 'company' => 'ITALO DESIGN', 'notes' => 'Standard terms'],
-        ['id' => 10, 'name' => 'James Miller', 'email' => 'james@miller.biz', 'phone' => '+1 (555) 000-1006', 'company' => 'MILLER & CO', 'notes' => 'Standard terms'],
-    ];
-}
-
-function getMockCliente(int $id): array
-{
-    $clientes = getMockClientes();
-    foreach ($clientes as $c) {
-        if ($c['id'] === $id) return $c;
-    }
-    return $clientes[0];
-}
-
 function getMockProyectos(): array
 {
     return [
