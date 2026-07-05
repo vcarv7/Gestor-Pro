@@ -3,6 +3,7 @@
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Auth\NewPasswordController;
 use App\Http\Controllers\Auth\PasswordResetLinkController;
+use App\Http\Controllers\AuditoriaController;
 use App\Http\Controllers\ClienteController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ProyectoController;
@@ -52,23 +53,7 @@ Route::middleware('auth')->group(function () {
         ->name('proyectos.tareas.bulk-destroy');
 
     // ============================================================================
-    // AUDITORIA (mock data)
+    // AUDITORIA (DB real, auto-logging via model events)
     // ============================================================================
-    Route::prefix('auditoria')->name('auditoria.')->group(function () {
-        Route::get('/', fn() => view('auditoria.index', ['actividades' => getMockActividades()]))->name('index');
-    });
+    Route::get('/auditoria', [AuditoriaController::class, 'index'])->name('auditoria.index');
 });
-
-// ============================================================================
-// MOCK DATA HELPERS (solo para auditoria)
-// ============================================================================
-function getMockActividades(): array
-{
-    return [
-        ['id' => 1, 'user' => 'Carlos', 'rol' => 'Admin Principal', 'accion' => 'Actualizó el proyecto', 'proyecto' => 'Branding Rediseño Nike', 'detalle' => 'Estado: En progreso → Revisión', 'timestamp' => 'Hace 2 mins', 'critica' => false],
-        ['id' => 2, 'user' => 'Ana Martinez', 'rol' => 'Editor', 'accion' => 'Subió archivos a', 'proyecto' => 'Campaña Verano 24', 'detalle' => '3 imágenes JPG, 1 archivo AI', 'timestamp' => 'Hace 15 mins', 'critica' => false],
-        ['id' => 3, 'user' => 'Carlos', 'rol' => 'Admin Principal', 'accion' => 'Eliminó el cliente', 'proyecto' => 'Global Tech S.A.', 'detalle' => '', 'timestamp' => 'Hoy, 10:45 AM', 'critica' => true],
-        ['id' => 4, 'user' => 'Sistema', 'rol' => 'Automatización', 'accion' => 'Backup diario completado con éxito', 'proyecto' => '', 'detalle' => 'Tamaño: 1.2 GB', 'timestamp' => 'Hoy, 04:00 AM', 'critica' => false],
-        ['id' => 5, 'user' => 'Roberto Ruiz', 'rol' => 'Colaborador', 'accion' => 'Creó nuevo hito en', 'proyecto' => 'App Finanzas UI', 'detalle' => '"Entrega fase 1 - Wireframes"', 'timestamp' => 'Ayer, 18:22 PM', 'critica' => false],
-    ];
-}
