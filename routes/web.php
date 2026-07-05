@@ -3,8 +3,12 @@
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Auth\NewPasswordController;
 use App\Http\Controllers\Auth\PasswordResetLinkController;
+use App\Http\Controllers\AuditoriaController;
 use App\Http\Controllers\ClienteController;
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\NotificationsController;
 use App\Http\Controllers\ProyectoController;
+use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\TareaController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
@@ -29,7 +33,7 @@ Route::get('/', function () {
 Route::middleware('auth')->group(function () {
 
     // Dashboard
-    Route::get('/dashboard', fn() => view('dashboard.dashboard'))->name('dashboard');
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     // ============================================================================
     // CLIENTES (DB real, scope por user_id)
@@ -51,23 +55,25 @@ Route::middleware('auth')->group(function () {
         ->name('proyectos.tareas.bulk-destroy');
 
     // ============================================================================
-    // AUDITORIA (mock data)
+    // AUDITORIA (DB real, auto-logging via model events)
     // ============================================================================
-    Route::prefix('auditoria')->name('auditoria.')->group(function () {
-        Route::get('/', fn() => view('auditoria.index', ['actividades' => getMockActividades()]))->name('index');
-    });
-});
+    Route::get('/auditoria', [AuditoriaController::class, 'index'])->name('auditoria.index');
 
-// ============================================================================
-// MOCK DATA HELPERS (solo para auditoria)
-// ============================================================================
-function getMockActividades(): array
-{
-    return [
-        ['id' => 1, 'user' => 'Carlos', 'rol' => 'Admin Principal', 'accion' => 'Actualizó el proyecto', 'proyecto' => 'Branding Rediseño Nike', 'detalle' => 'Estado: En progreso → Revisión', 'timestamp' => 'Hace 2 mins', 'critica' => false],
-        ['id' => 2, 'user' => 'Ana Martinez', 'rol' => 'Editor', 'accion' => 'Subió archivos a', 'proyecto' => 'Campaña Verano 24', 'detalle' => '3 imágenes JPG, 1 archivo AI', 'timestamp' => 'Hace 15 mins', 'critica' => false],
-        ['id' => 3, 'user' => 'Carlos', 'rol' => 'Admin Principal', 'accion' => 'Eliminó el cliente', 'proyecto' => 'Global Tech S.A.', 'detalle' => '', 'timestamp' => 'Hoy, 10:45 AM', 'critica' => true],
-        ['id' => 4, 'user' => 'Sistema', 'rol' => 'Automatización', 'accion' => 'Backup diario completado con éxito', 'proyecto' => '', 'detalle' => 'Tamaño: 1.2 GB', 'timestamp' => 'Hoy, 04:00 AM', 'critica' => false],
-        ['id' => 5, 'user' => 'Roberto Ruiz', 'rol' => 'Colaborador', 'accion' => 'Creó nuevo hito en', 'proyecto' => 'App Finanzas UI', 'detalle' => '"Entrega fase 1 - Wireframes"', 'timestamp' => 'Ayer, 18:22 PM', 'critica' => false],
-    ];
-}
+    // ============================================================================
+    // AJUSTES (Settings)
+    // ============================================================================
+    Route::get('/ajustes', [SettingsController::class, 'show'])->name('settings.show');
+    Route::put('/ajustes/profile', [SettingsController::class, 'updateProfile'])->name('settings.update-profile');
+    Route::put('/ajustes/password', [SettingsController::class, 'updatePassword'])->name('settings.update-password');
+    Route::put('/ajustes/notifications', [SettingsController::class, 'updateNotifications'])->name('settings.update-notifications');
+    Route::put('/ajustes/appearance', [SettingsController::class, 'updateAppearance'])->name('settings.update-appearance');
+    Route::delete('/ajustes/account', [SettingsController::class, 'destroy'])->name('settings.destroy-account');
+
+    // ============================================================================
+    // NOTIFICACIONES
+    // ============================================================================
+    Route::get('/notificaciones', [NotificationsController::class, 'index'])->name('notifications.index');
+    Route::get('/notificaciones/recent', [NotificationsController::class, 'recent'])->name('notifications.recent');
+    Route::patch('/notificaciones/{notification}/read', [NotificationsController::class, 'markAsRead'])->name('notifications.mark-as-read');
+    Route::patch('/notificaciones/read-all', [NotificationsController::class, 'markAllAsRead'])->name('notifications.mark-all-as-read');
+});

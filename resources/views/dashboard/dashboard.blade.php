@@ -18,20 +18,16 @@
 
             {{-- 3 Stats Cards --}}
             <div class="grid grid-cols-1 md:grid-cols-3 gap-md">
-                <x-stat-card label="Total Clientes" :value="15" icon="group" iconBg="primary" />
-                <x-stat-card label="Proyectos Activos" :value="8" icon="folder_open" iconBg="primary" />
-                <x-stat-card label="Tareas Pendientes" :value="12" icon="task_alt" iconBg="primary" />
+                <x-stat-card label="Total Clientes" :value="$totalClientes" icon="group" iconBg="primary" />
+                <x-stat-card label="Proyectos Activos" :value="$proyectosActivos" icon="folder_open" iconBg="primary" />
+                <x-stat-card label="Tareas Pendientes" :value="$tareasPendientes" icon="task_alt" iconBg="primary" />
             </div>
 
             {{-- Chart: Proyectos creados --}}
             <div class="login-card rounded-xl p-lg">
                 <div class="flex items-center justify-between mb-md">
                     <h2 class="font-headline-sm text-headline-sm text-on-surface">Proyectos creados</h2>
-                    <select class="px-md py-xs rounded-lg border border-outline-variant bg-surface-container-lowest font-label-md text-label-md text-on-surface focus:ring-2 focus:ring-primary focus:border-primary outline-none cursor-pointer">
-                        <option>Últimos 6 meses</option>
-                        <option>Último año</option>
-                        <option>Todo</option>
-                    </select>
+                    <span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Últimos 6 meses</span>
                 </div>
                 <div class="h-[280px]">
                     <canvas id="proyectosChart"></canvas>
@@ -42,7 +38,7 @@
             <div class="login-card rounded-xl overflow-hidden">
                 <div class="p-lg flex items-center justify-between border-b border-outline-variant">
                     <h2 class="font-headline-sm text-headline-sm text-on-surface">Tareas Urgentes</h2>
-                    <a href="#" class="font-label-md text-label-md text-primary hover:underline flex items-center gap-xs">
+                    <a href="{{ route('proyectos.index') }}" class="font-label-md text-label-md text-primary hover:underline flex items-center gap-xs">
                         Ver todas
                         <span class="material-symbols-outlined text-[16px]">arrow_forward</span>
                     </a>
@@ -59,45 +55,37 @@
                             </tr>
                         </thead>
                         <tbody>
-                            <tr class="border-b border-outline-variant hover:bg-surface-container transition-colors">
-                                <td class="px-lg py-md font-body-md text-body-md text-on-surface">Revisión de Prototipo V2</td>
-                                <td class="px-lg py-md font-body-md text-body-md text-on-surface-variant">Rediseño Web UX</td>
-                                <td class="px-lg py-md font-body-md text-body-md text-on-surface-variant">Hoy, 18:00</td>
-                                <td class="px-lg py-md">
-                                    <x-status-badge variant="danger">Alta</x-status-badge>
-                                </td>
-                                <td class="px-lg py-md text-right">
-                                    <button class="text-on-surface-variant hover:text-on-surface p-sm rounded-md hover:bg-surface-container-high transition-colors">
-                                        <span class="material-symbols-outlined text-[20px]">more_vert</span>
-                                    </button>
-                                </td>
-                            </tr>
-                            <tr class="border-b border-outline-variant hover:bg-surface-container transition-colors">
-                                <td class="px-lg py-md font-body-md text-body-md text-on-surface">Envío de Factura Final</td>
-                                <td class="px-lg py-md font-body-md text-body-md text-on-surface-variant">Consultoría IT</td>
-                                <td class="px-lg py-md font-body-md text-body-md text-on-surface-variant">Mañana, 09:00</td>
-                                <td class="px-lg py-md">
-                                    <x-status-badge variant="danger">Alta</x-status-badge>
-                                </td>
-                                <td class="px-lg py-md text-right">
-                                    <button class="text-on-surface-variant hover:text-on-surface p-sm rounded-md hover:bg-surface-container-high transition-colors">
-                                        <span class="material-symbols-outlined text-[20px]">more_vert</span>
-                                    </button>
-                                </td>
-                            </tr>
-                            <tr class="hover:bg-surface-container transition-colors">
-                                <td class="px-lg py-md font-body-md text-body-md text-on-surface line-through opacity-60">Definición de Styleguide y paleta de colores</td>
-                                <td class="px-lg py-md font-body-md text-body-md text-on-surface-variant">Branding</td>
-                                <td class="px-lg py-md font-body-md text-body-md text-on-surface-variant">Ayer</td>
-                                <td class="px-lg py-md">
-                                    <x-status-badge variant="success">Completada</x-status-badge>
-                                </td>
-                                <td class="px-lg py-md text-right">
-                                    <button class="text-on-surface-variant hover:text-on-surface p-sm rounded-md hover:bg-surface-container-high transition-colors">
-                                        <span class="material-symbols-outlined text-[20px]">more_vert</span>
-                                    </button>
-                                </td>
-                            </tr>
+                            @forelse ($tareasUrgentes as $tarea)
+                                <tr class="border-b border-outline-variant hover:bg-surface-container transition-colors">
+                                    <td class="px-lg py-md font-body-md text-body-md text-on-surface">{{ $tarea->nombre }}</td>
+                                    <td class="px-lg py-md font-body-md text-body-md text-on-surface-variant">
+                                        @if ($tarea->proyecto)
+                                            <a href="{{ route('proyectos.show', $tarea->proyecto) }}" class="hover:text-primary">
+                                                {{ $tarea->proyecto->titulo }}
+                                            </a>
+                                        @else
+                                            —
+                                        @endif
+                                    </td>
+                                    <td class="px-lg py-md font-body-md text-body-md text-on-surface-variant">{{ $tarea->fechaHumana() }}</td>
+                                    <td class="px-lg py-md">
+                                        <x-status-badge :variant="$tarea->prioridadBadgeVariant()">{{ $tarea->prioridadLabel() }}</x-status-badge>
+                                    </td>
+                                    <td class="px-lg py-md text-right">
+                                        <a href="{{ route('tareas.edit', $tarea) }}" class="text-on-surface-variant hover:text-primary p-sm rounded-md hover:bg-surface-container-high transition-colors inline-block" title="Ver/editar">
+                                            <span class="material-symbols-outlined text-[20px]">arrow_forward</span>
+                                        </a>
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="5" class="px-lg py-xl text-center">
+                                        <span class="material-symbols-outlined text-on-surface-variant text-4xl">task_alt</span>
+                                        <p class="font-body-md text-body-md text-on-surface-variant mt-md">No hay tareas urgentes pendientes.</p>
+                                        <p class="font-body-sm text-body-sm text-on-surface-variant">Cuando tengas tareas con prioridad Alta, aparecerán acá.</p>
+                                    </td>
+                                </tr>
+                            @endforelse
                         </tbody>
                     </table>
                 </div>
@@ -107,7 +95,12 @@
 
         {{-- RIGHT SIDEBAR --}}
         <aside class="space-y-lg">
-            @include('partials.dashboard-right-sidebar')
+            @include('partials.dashboard-right-sidebar', [
+                'progresoSemanal' => $progresoSemanal,
+                'tareasCompletadasSemana' => $tareasCompletadasSemana,
+                'tareasTotales' => $tareasTotales,
+                'actividadReciente' => $actividadReciente,
+            ])
         </aside>
 
     </div>
@@ -118,13 +111,17 @@
             const ctx = document.getElementById('proyectosChart');
             if (!ctx || typeof Chart === 'undefined') return;
 
+            const labels = @json($proyectosPorMes->pluck('label'));
+            const data = @json($proyectosPorMes->pluck('count'));
+            const maxValue = Math.max(...data, 1);
+
             new Chart(ctx, {
                 type: 'bar',
                 data: {
-                    labels: ['May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct'],
+                    labels: labels,
                     datasets: [{
                         label: 'Proyectos',
-                        data: [4, 7, 5, 9, 6, 8],
+                        data: data,
                         backgroundColor: '#0f172a',
                         borderRadius: 6,
                         barThickness: 32,
@@ -139,7 +136,7 @@
                     scales: {
                         y: {
                             beginAtZero: true,
-                            max: 9,
+                            max: maxValue + 2,
                             ticks: { stepSize: 1, color: '#76777d', font: { family: 'Inter', size: 12 } },
                             grid: { color: '#e2e8f0', drawBorder: false },
                         },

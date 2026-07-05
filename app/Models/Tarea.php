@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Facades\Auth;
 
 class Tarea extends Model
 {
@@ -40,6 +41,11 @@ class Tarea extends Model
         return $this->belongsTo(Proyecto::class);
     }
 
+    public function getActividadLabel(): string
+    {
+        return $this->nombre ?? "Tarea #{$this->id}";
+    }
+
     public function prioridadLabel(): string
     {
         return match ($this->prioridad) {
@@ -68,5 +74,27 @@ class Tarea extends Model
         if ($fecha->isTomorrow()) return 'Mañana, ' . $fecha->format('H:i');
         if ($fecha->isYesterday()) return 'Ayer';
         return $fecha->format('d M Y');
+    }
+
+    protected static function booted()
+    {
+        if (! Auth::id()) {
+            return;
+        }
+
+        $log = function ($model, $action) {
+            Actividad::create([
+                'user_id' => Auth::id(),
+                'action' => $action,
+                'subject_type' => get_class($model),
+                'subject_id' => $model->id,
+                'subject_label' => $model->getActividadLabel(),
+                'description' => null,
+            ]);
+        };
+
+        static::created(fn ($m) => $log($m, 'create'));
+        static::updated(fn ($m) => $log($m, 'update'));
+        static::deleted(fn ($m) => $log($m, 'delete'));
     }
 }

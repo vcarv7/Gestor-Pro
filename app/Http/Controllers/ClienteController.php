@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Helpers\Notifier;
 use App\Http\Requests\StoreClienteRequest;
 use App\Http\Requests\UpdateClienteRequest;
 use App\Models\Cliente;
@@ -62,7 +63,17 @@ class ClienteController extends Controller
     {
         $this->authorizeOwner($cliente);
 
+        if ($cliente->proyectos()->exists()) {
+            $count = $cliente->proyectos()->count();
+            return back()->withErrors([
+                'delete' => "No se puede eliminar el cliente porque tiene {$count} proyecto(s) asociado(s). Elimina o reasigna los proyectos primero.",
+            ]);
+        }
+
+        $nombre = $cliente->nombre;
         $cliente->delete();
+
+        Notifier::notify(auth()->user(), 'cliente_delete', 'Cliente eliminado', "Se eliminó el cliente: {$nombre}");
 
         return redirect()
             ->route('clientes.index')

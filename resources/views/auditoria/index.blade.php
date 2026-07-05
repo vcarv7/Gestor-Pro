@@ -1,4 +1,6 @@
 <x-app-layout>
+    <x-slot:title>Registro de Actividad</x-slot:title>
+
     <div class="space-y-lg">
 
         {{-- Header --}}
@@ -23,15 +25,15 @@
 
         {{-- 3 Stats --}}
         <div class="grid grid-cols-1 md:grid-cols-3 gap-md">
-            <x-stat-card label="Acciones Hoy" :value="142" icon="touch_app" iconBg="primary" />
-            <x-stat-card label="Usuarios Activos" :value="12" icon="group" iconBg="primary" />
+            <x-stat-card label="Acciones Hoy" :value="$accionesHoy" icon="touch_app" iconBg="primary" />
+            <x-stat-card label="Usuarios Activos" :value="$usuariosActivos" icon="group" iconBg="primary" />
             <div class="login-card rounded-xl p-lg flex items-start justify-between gap-md">
                 <div class="min-w-0">
                     <p class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Acciones Críticas</p>
-                    <p class="font-display-lg text-display-lg text-error leading-none mt-md">3</p>
+                    <p class="font-display-lg text-display-lg {{ $accionesCriticas > 0 ? 'text-error' : 'text-on-surface' }} leading-none mt-md">{{ $accionesCriticas }}</p>
                 </div>
-                <div class="w-14 h-14 shrink-0 rounded-xl bg-error-container flex items-center justify-center">
-                    <span class="material-symbols-outlined text-error text-[28px]">warning</span>
+                <div class="w-14 h-14 shrink-0 rounded-xl {{ $accionesCriticas > 0 ? 'bg-error-container' : 'bg-primary-container' }} flex items-center justify-center">
+                    <span class="material-symbols-outlined {{ $accionesCriticas > 0 ? 'text-error' : 'text-primary' }} text-[28px]">warning</span>
                 </div>
             </div>
         </div>
@@ -48,36 +50,48 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach ($actividades as $a)
+                        @forelse ($actividades as $act)
                             <tr class="border-b border-outline-variant hover:bg-surface-container transition-colors">
                                 <td class="px-lg py-md">
                                     <div class="flex items-center gap-sm">
-                                        <x-avatar :name="$a['user']" size="sm" :color="$a['critica'] ? 'secondary' : 'primary'" />
+                                        <x-avatar :name="$act->user?->name ?? '?'" size="sm" :color="$act->action === 'delete' ? 'secondary' : 'primary'" />
                                         <div>
-                                            <p class="font-body-md text-body-md text-on-surface font-semibold">{{ $a['user'] }}</p>
-                                            <p class="font-label-sm text-label-sm text-on-surface-variant">{{ $a['rol'] }}</p>
+                                            <p class="font-body-md text-body-md text-on-surface font-semibold">{{ $act->user?->name ?? 'Usuario eliminado' }}</p>
+                                            <p class="font-label-sm text-label-sm text-on-surface-variant">{{ $act->user?->rol ?? 'Admin Principal' }}</p>
                                         </div>
                                     </div>
                                 </td>
                                 <td class="px-lg py-md">
                                     <p class="font-body-md text-body-md text-on-surface">
-                                        @if ($a['critica'])
-                                            <x-status-badge variant="danger" class="mr-xs">Eliminación</x-status-badge>
-                                        @endif
-                                        {{ $a['accion'] }} <strong class="font-semibold">{{ $a['proyecto'] }}</strong>
+                                        <x-status-badge :variant="$act->actionBadgeVariant()">{{ ucfirst($act->action) }}</x-status-badge>
+                                        <span class="ml-sm">{{ $act->fullDescription() }}</span>
                                     </p>
-                                    @if ($a['detalle'])
-                                        <p class="font-body-sm text-body-sm text-on-surface-variant mt-xs">{{ $a['detalle'] }}</p>
+                                    @if ($act->description)
+                                        <p class="font-body-sm text-body-sm text-on-surface-variant mt-xs">{{ $act->description }}</p>
                                     @endif
                                 </td>
-                                <td class="px-lg py-md text-right font-body-sm text-body-sm text-on-surface-variant whitespace-nowrap">{{ $a['timestamp'] }}</td>
+                                <td class="px-lg py-md text-right font-body-sm text-body-sm text-on-surface-variant whitespace-nowrap">
+                                    {{ $act->created_at->diffForHumans() }}
+                                    <br>
+                                    <span class="font-label-sm text-label-sm">{{ $act->created_at->format('d M Y, H:i') }}</span>
+                                </td>
                             </tr>
-                        @endforeach
+                        @empty
+                            <tr>
+                                <td colspan="3" class="px-lg py-xl text-center">
+                                    <span class="material-symbols-outlined text-on-surface-variant text-4xl">history</span>
+                                    <p class="font-body-md text-body-md text-on-surface-variant mt-md">Sin actividad registrada</p>
+                                    <p class="font-body-sm text-body-sm text-on-surface-variant">Tus acciones (crear, editar, eliminar clientes/proyectos/tareas) aparecerán acá.</p>
+                                </td>
+                            </tr>
+                        @endforelse
                     </tbody>
                 </table>
             </div>
 
-            <x-pagination :current="1" :last="248" :total="1240" :perPage="5" label="registros" />
+            <div class="px-md py-md border-t border-outline-variant">
+                {{ $actividades->links() }}
+            </div>
         </div>
 
         {{-- Banner de ayuda --}}

@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\Auth;
 
 class Proyecto extends Model
 {
@@ -51,6 +52,11 @@ class Proyecto extends Model
         return $this->hasMany(Tarea::class)->where('completada', false);
     }
 
+    public function getActividadLabel(): string
+    {
+        return $this->titulo ?? "Proyecto #{$this->id}";
+    }
+
     public function estadoLabel(): string
     {
         return match ($this->estado) {
@@ -71,5 +77,27 @@ class Proyecto extends Model
             'cancelado' => 'danger',
             default => 'neutral',
         };
+    }
+
+    protected static function booted()
+    {
+        if (! Auth::id()) {
+            return;
+        }
+
+        $log = function ($model, $action) {
+            Actividad::create([
+                'user_id' => Auth::id(),
+                'action' => $action,
+                'subject_type' => get_class($model),
+                'subject_id' => $model->id,
+                'subject_label' => $model->getActividadLabel(),
+                'description' => null,
+            ]);
+        };
+
+        static::created(fn ($m) => $log($m, 'create'));
+        static::updated(fn ($m) => $log($m, 'update'));
+        static::deleted(fn ($m) => $log($m, 'delete'));
     }
 }
