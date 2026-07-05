@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Helpers\Notifier;
 use App\Http\Requests\StoreTareaRequest;
 use App\Http\Requests\UpdateTareaRequest;
 use App\Models\Proyecto;
@@ -73,7 +74,10 @@ class TareaController extends Controller
     {
         $this->authorizeTareaOwner($tarea);
         $proyectoId = $tarea->proyecto_id;
+        $titulo = $tarea->titulo;
         $tarea->delete();
+
+        Notifier::notify(auth()->user(), 'tarea_bulk_delete', 'Tarea eliminada', "Se eliminó la tarea: {$titulo}");
 
         return redirect()
             ->route('proyectos.show', $proyectoId)
@@ -99,6 +103,8 @@ class TareaController extends Controller
             ->where('user_id', auth()->id())
             ->where('proyecto_id', $proyecto->id)
             ->delete();
+
+        Notifier::notify(auth()->user(), 'tarea_bulk_delete', 'Tareas eliminadas', "Se eliminaron {$count} tarea(s) del proyecto: {$proyecto->nombre}");
 
         return redirect()
             ->route('proyectos.show', $proyecto)

@@ -6,7 +6,7 @@
         ['name' => 'Clientes', 'route' => 'clientes.index', 'icon' => 'group'],
         ['name' => 'Proyectos', 'route' => 'proyectos.index', 'icon' => 'folder'],
         ['name' => 'Actividad', 'route' => 'auditoria.index', 'icon' => 'history'],
-        ['name' => 'Ajustes', 'route' => '#', 'icon' => 'settings'],
+        ['name' => 'Ajustes', 'route' => 'settings.show', 'icon' => 'settings'],
     ];
 @endphp
 

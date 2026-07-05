@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Helpers\Notifier;
 use App\Http\Requests\StoreProyectoRequest;
 use App\Http\Requests\UpdateProyectoRequest;
 use App\Models\Cliente;
@@ -64,7 +65,10 @@ class ProyectoController extends Controller
     public function destroy(Proyecto $proyecto): RedirectResponse
     {
         $this->authorizeOwner($proyecto);
+        $nombre = $proyecto->nombre;
         $proyecto->delete();
+
+        Notifier::notify(auth()->user(), 'proyecto_delete', 'Proyecto eliminado', "Se eliminó el proyecto: {$nombre}");
 
         return redirect()
             ->route('proyectos.index')

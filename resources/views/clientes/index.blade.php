@@ -20,8 +20,19 @@
 
         {{-- Flash message --}}
         @if (session('status'))
-            <div class="login-card rounded-xl p-md bg-secondary-container border-secondary-fixed">
+            <div class="rounded-xl p-md bg-secondary-container border-secondary-fixed">
                 <p class="font-body-md text-body-md text-on-secondary-container">{{ session('status') }}</p>
+            </div>
+        @endif
+
+        {{-- Errors --}}
+        @if ($errors->any())
+            <div class="rounded-xl p-md bg-error-container border border-error">
+                <ul class="space-y-xs">
+                    @foreach ($errors->all() as $error)
+                        <li class="font-body-md text-body-md text-on-error-container">{{ $error }}</li>
+                    @endforeach
+                </ul>
             </div>
         @endif
 
