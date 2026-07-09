@@ -55,20 +55,20 @@
             </nav>
 
             {{-- Content --}}
-            <div class="flex-1 min-w-0">
-                <div x-show="tab === 'profile'" x-cloak>
+            <div class="flex-1 min-w-0 w-full">
+                <div x-show="tab === 'profile'">
                     @include('settings.partials.profile-tab')
                 </div>
-                <div x-show="tab === 'security'" x-cloak>
+                <div x-show="tab === 'security'">
                     @include('settings.partials.security-tab')
                 </div>
-                <div x-show="tab === 'notifications'" x-cloak>
+                <div x-show="tab === 'notifications'">
                     @include('settings.partials.notifications-tab')
                 </div>
-                <div x-show="tab === 'appearance'" x-cloak>
+                <div x-show="tab === 'appearance'">
                     @include('settings.partials.appearance-tab')
                 </div>
-                <div x-show="tab === 'account'" x-cloak>
+                <div x-show="tab === 'account'">
                     @include('settings.partials.account-tab')
                 </div>
             </div>
