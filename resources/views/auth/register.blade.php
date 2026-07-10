@@ -1,5 +1,5 @@
 <x-guest-layout>
-    <x-slot:title>Iniciar sesión</x-slot:title>
+    <x-slot:title>Crear cuenta</x-slot:title>
 
     <div class="auth-container bg-subtle-pattern">
         <main class="w-full max-w-[440px] animate-fade-in">
@@ -9,18 +9,37 @@
                 <h1 class="font-display-lg text-display-lg text-primary mb-xs">Mi Gestor Pro</h1>
             </div>
 
-            <!-- Login Card -->
+            <!-- Register Card -->
             <div class="login-card rounded-xl p-lg md:p-xl shadow-sm">
                 <div class="mb-lg">
-                    <h2 class="font-headline-sm text-headline-sm text-on-surface">Iniciar sesión</h2>
-                    <p class="font-body-sm text-body-sm text-on-surface-variant mt-xs">Ingresa tus credenciales para acceder a tu panel de control.</p>
+                    <h2 class="font-headline-sm text-headline-sm text-on-surface">Crear cuenta</h2>
+                    <p class="font-body-sm text-body-sm text-on-surface-variant mt-xs">Empezá a gestionar tus proyectos en minutos.</p>
                 </div>
 
                 <!-- Session Status -->
                 <x-auth-session-status class="mb-4" :status="session('status')" />
 
-                <form method="POST" action="{{ route('login') }}" data-loading class="space-y-lg">
+                <form method="POST" action="{{ route('register') }}" data-loading class="space-y-lg">
                     @csrf
+
+                    <!-- Name Field -->
+                    <div>
+                        <x-input-label for="name" value="Nombre" class="font-label-md text-label-md text-on-surface-variant mb-xs" />
+                        <div class="relative">
+                            <span class="material-symbols-outlined absolute left-md top-1/2 -translate-y-1/2 text-outline pointer-events-none">person</span>
+                            <x-text-input
+                                id="name"
+                                name="name"
+                                type="text"
+                                required
+                                autofocus
+                                autocomplete="name"
+                                :value="old('name')"
+                                placeholder="Tu nombre"
+                                class="w-full pl-[48px] pr-md py-sm bg-surface-container-lowest border border-outline-variant rounded-lg font-body-md text-body-md text-on-surface focus:ring-2 focus:ring-primary focus:border-primary transition-all placeholder:text-outline-variant" />
+                        </div>
+                        <x-input-error :messages="$errors->get('name')" class="mt-2" />
+                    </div>
 
                     <!-- Email Field -->
                     <div>
@@ -32,7 +51,6 @@
                                 name="email"
                                 type="email"
                                 required
-                                autofocus
                                 autocomplete="username"
                                 :value="old('email')"
                                 placeholder="tu@email.com"
@@ -51,7 +69,7 @@
                                 name="password"
                                 type="password"
                                 required
-                                autocomplete="current-password"
+                                autocomplete="new-password"
                                 placeholder="••••••••"
                                 class="w-full pl-[48px] pr-md py-sm bg-surface-container-lowest border border-outline-variant rounded-lg font-body-md text-body-md text-on-surface focus:ring-2 focus:ring-primary focus:border-primary transition-all placeholder:text-outline-variant" />
                             <button type="button" data-toggle-password
@@ -62,34 +80,35 @@
                         <x-input-error :messages="$errors->get('password')" class="mt-2" />
                     </div>
 
-                    <!-- Remember & Forgot -->
-                    <div class="flex items-center justify-between">
-                        <label for="remember_me" class="flex items-center cursor-pointer group">
-                            <input id="remember_me" type="checkbox" name="remember"
-                                class="w-5 h-5 rounded border-outline-variant text-primary focus:ring-primary transition-all">
-                            <span class="ml-sm font-label-md text-label-md text-on-surface-variant group-hover:text-on-surface transition-colors">Recordarme</span>
-                        </label>
-
-                        @if (Route::has('password.request'))
-                            <a href="{{ route('password.request') }}"
-                                class="font-label-md text-label-md text-secondary hover:text-primary transition-colors hover:underline decoration-2 underline-offset-4">
-                                ¿Olvidaste tu contraseña?
-                            </a>
-                        @endif
+                    <!-- Confirm Password Field -->
+                    <div>
+                        <x-input-label for="password_confirmation" value="Confirmar contraseña" class="font-label-md text-label-md text-on-surface-variant mb-xs" />
+                        <div class="relative">
+                            <span class="material-symbols-outlined absolute left-md top-1/2 -translate-y-1/2 text-outline pointer-events-none">lock_reset</span>
+                            <x-text-input
+                                id="password_confirmation"
+                                name="password_confirmation"
+                                type="password"
+                                required
+                                autocomplete="new-password"
+                                placeholder="••••••••"
+                                class="w-full pl-[48px] pr-md py-sm bg-surface-container-lowest border border-outline-variant rounded-lg font-body-md text-body-md text-on-surface focus:ring-2 focus:ring-primary focus:border-primary transition-all placeholder:text-outline-variant" />
+                        </div>
+                        <x-input-error :messages="$errors->get('password_confirmation')" class="mt-2" />
                     </div>
 
-                    <!-- Login Button -->
+                    <!-- Register Button -->
                     <x-primary-button class="w-full justify-center bg-[#0F172A] hover:bg-black text-white font-label-md text-label-md py-md px-lg rounded-xl gap-sm transition-all duration-200 active:scale-[0.98] shadow-md">
-                        Acceder
-                        <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+                        Crear cuenta
+                        <span class="material-symbols-outlined text-[18px]">person_add</span>
                     </x-primary-button>
                 </form>
 
-                <!-- Register Link -->
+                <!-- Login Link -->
                 <p class="text-center font-body-sm text-body-sm text-on-surface-variant mt-lg">
-                    ¿No tenés cuenta?
-                    <a href="{{ route('register') }}" class="font-label-md text-label-md text-secondary hover:text-primary hover:underline decoration-2 underline-offset-4 transition-colors">
-                        Registrate
+                    ¿Ya tenés cuenta?
+                    <a href="{{ route('login') }}" class="font-label-md text-label-md text-secondary hover:text-primary hover:underline decoration-2 underline-offset-4 transition-colors">
+                        Iniciá sesión
                     </a>
                 </p>
             </div>
