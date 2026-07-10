@@ -8,6 +8,7 @@ use App\Http\Controllers\ClienteController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\NotificationsController;
 use App\Http\Controllers\ProyectoController;
+use App\Http\Controllers\SearchController;
 use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\TareaController;
 use Illuminate\Support\Facades\Auth;
@@ -34,6 +35,9 @@ Route::middleware('auth')->group(function () {
 
     // Dashboard
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+
+    // Búsqueda global (autocomplete en header)
+    Route::get('/buscar', [SearchController::class, 'search'])->name('search');
 
     // ============================================================================
     // CLIENTES (DB real, scope por user_id)
