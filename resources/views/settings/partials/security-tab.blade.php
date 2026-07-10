@@ -1,26 +1,26 @@
-<div class="bg-surface-container-low rounded-xl p-lg border border-outline-variant">
+<div class="bg-surface-container-lowest rounded-xl p-lg border border-outline-variant">
     <h2 class="font-headline-sm text-headline-sm text-on-surface mb-lg">Cambiar Contraseña</h2>
 
-    <form method="POST" action="{{ route('settings.update-password') }}" data-loading class="space-y-md max-w-xl">
+    <form method="POST" action="{{ route('settings.update-password') }}" data-loading class="space-y-md w-full">
         @csrf
         @method('PUT')
 
-        <div>
-            <label for="current_password" class="block font-label-md text-label-md text-on-surface mb-sm">Contraseña Actual</label>
+        <div class="space-y-xs">
+            <label for="current_password" class="block font-label-md text-label-md text-on-surface-variant">Contraseña Actual</label>
             <input id="current_password" name="current_password" type="password"
-                class="w-full px-md py-sm bg-surface-container-low border border-outline-variant rounded-lg font-body-md text-body-md text-on-surface placeholder:text-outline focus:ring-2 focus:ring-primary focus:border-primary focus:bg-surface-container-lowest transition-all outline-none" />
+                class="block w-full px-md py-sm rounded-lg border border-outline-variant bg-surface-container-lowest font-body-md text-body-md text-on-surface placeholder:text-outline focus:ring-2 focus:ring-primary focus:border-primary transition-all outline-none" />
         </div>
 
-        <div>
-            <label for="password" class="block font-label-md text-label-md text-on-surface mb-sm">Nueva Contraseña</label>
+        <div class="space-y-xs">
+            <label for="password" class="block font-label-md text-label-md text-on-surface-variant">Nueva Contraseña</label>
             <input id="password" name="password" type="password"
-                class="w-full px-md py-sm bg-surface-container-low border border-outline-variant rounded-lg font-body-md text-body-md text-on-surface placeholder:text-outline focus:ring-2 focus:ring-primary focus:border-primary focus:bg-surface-container-lowest transition-all outline-none" />
+                class="block w-full px-md py-sm rounded-lg border border-outline-variant bg-surface-container-lowest font-body-md text-body-md text-on-surface placeholder:text-outline focus:ring-2 focus:ring-primary focus:border-primary transition-all outline-none" />
         </div>
 
-        <div>
-            <label for="password_confirmation" class="block font-label-md text-label-md text-on-surface mb-sm">Confirmar Nueva Contraseña</label>
+        <div class="space-y-xs">
+            <label for="password_confirmation" class="block font-label-md text-label-md text-on-surface-variant">Confirmar Nueva Contraseña</label>
             <input id="password_confirmation" name="password_confirmation" type="password"
-                class="w-full px-md py-sm bg-surface-container-low border border-outline-variant rounded-lg font-body-md text-body-md text-on-surface placeholder:text-outline focus:ring-2 focus:ring-primary focus:border-primary focus:bg-surface-container-lowest transition-all outline-none" />
+                class="block w-full px-md py-sm rounded-lg border border-outline-variant bg-surface-container-lowest font-body-md text-body-md text-on-surface placeholder:text-outline focus:ring-2 focus:ring-primary focus:border-primary transition-all outline-none" />
         </div>
 
         <div class="pt-sm">

@@ -1,7 +1,7 @@
-<div class="bg-surface-container-low rounded-xl p-lg border border-outline-variant">
+<div class="bg-surface-container-lowest rounded-xl p-lg border border-outline-variant">
     <h2 class="font-headline-sm text-headline-sm text-on-surface mb-lg">Preferencias de Notificaciones</h2>
 
-    <form method="POST" action="{{ route('settings.update-notifications') }}" data-loading class="space-y-md max-w-xl">
+    <form method="POST" action="{{ route('settings.update-notifications') }}" data-loading class="space-y-md w-full">
         @csrf
         @method('PUT')
 
@@ -10,7 +10,7 @@
                 <input type="checkbox" name="notify_password_change" value="1" {{ $setting->notify_password_change ? 'checked' : '' }}
                     class="w-5 h-5 rounded border-outline-variant text-primary focus:ring-primary" />
                 <div>
-                    <div class="font-label-md text-label-md text-on-surface">Cambio de contraseña</div>
+                    <div class="font-label-md text-label-md text-on-surface-variant">Cambio de contraseña</div>
                     <div class="font-body-sm text-body-sm text-on-surface-variant">Cuando cambies tu contraseña</div>
                 </div>
             </label>
@@ -19,7 +19,7 @@
                 <input type="checkbox" name="notify_cliente_delete" value="1" {{ $setting->notify_cliente_delete ? 'checked' : '' }}
                     class="w-5 h-5 rounded border-outline-variant text-primary focus:ring-primary" />
                 <div>
-                    <div class="font-label-md text-label-md text-on-surface">Eliminación de clientes</div>
+                    <div class="font-label-md text-label-md text-on-surface-variant">Eliminación de clientes</div>
                     <div class="font-body-sm text-body-sm text-on-surface-variant">Cuando elimines un cliente</div>
                 </div>
             </label>
@@ -28,7 +28,7 @@
                 <input type="checkbox" name="notify_proyecto_delete" value="1" {{ $setting->notify_proyecto_delete ? 'checked' : '' }}
                     class="w-5 h-5 rounded border-outline-variant text-primary focus:ring-primary" />
                 <div>
-                    <div class="font-label-md text-label-md text-on-surface">Eliminación de proyectos</div>
+                    <div class="font-label-md text-label-md text-on-surface-variant">Eliminación de proyectos</div>
                     <div class="font-body-sm text-body-sm text-on-surface-variant">Cuando elimines un proyecto</div>
                 </div>
             </label>
@@ -37,7 +37,7 @@
                 <input type="checkbox" name="notify_tarea_bulk_delete" value="1" {{ $setting->notify_tarea_bulk_delete ? 'checked' : '' }}
                     class="w-5 h-5 rounded border-outline-variant text-primary focus:ring-primary" />
                 <div>
-                    <div class="font-label-md text-label-md text-on-surface">Eliminación masiva de tareas</div>
+                    <div class="font-label-md text-label-md text-on-surface-variant">Eliminación masiva de tareas</div>
                     <div class="font-body-sm text-body-sm text-on-surface-variant">Cuando elimines varias tareas a la vez</div>
                 </div>
             </label>

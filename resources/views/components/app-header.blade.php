@@ -13,10 +13,88 @@ if (strlen($initials) >= 2) break;
 <header class="sticky top-0 z-10 bg-surface-container-lowest border-b border-outline-variant px-lg py-md flex items-center gap-md">
 
     {{-- Search --}}
-    <div class="flex-1 max-w-2xl relative">
-        <span class="material-symbols-outlined absolute left-md top-1/2 -translate-y-1/2 text-outline pointer-events-none text-[20px]">search</span>
+    <div class="flex-1 max-w-2xl relative"
+        x-data="{
+            query: '',
+            results: [],
+            open: false,
+            isLoading: false,
+            timer: null,
+            searchUrl: '{{ route('search') }}',
+            search() {
+                clearTimeout(this.timer);
+                if (this.query.length < 2) {
+                    this.results = [];
+                    this.isLoading = false;
+                    return;
+                }
+                this.isLoading = true;
+                this.timer = setTimeout(async () => {
+                    try {
+                        const res = await fetch(this.searchUrl + '?q=' + encodeURIComponent(this.query));
+                        const data = await res.json();
+                        this.results = data.results || [];
+                    } catch (e) {
+                        this.results = [];
+                    } finally {
+                        this.isLoading = false;
+                    }
+                }, 300);
+            },
+            badgeClasses(variant) {
+                return {
+                    'primary': 'bg-primary-container text-on-primary-container',
+                    'secondary': 'bg-secondary-container text-on-secondary-container',
+                    'tertiary': 'bg-tertiary-container text-on-tertiary-container',
+                }[variant] || 'bg-surface-container text-on-surface';
+            }
+        }"
+        @click.outside="open = false">
+        <span class="material-symbols-outlined absolute left-md top-1/2 -translate-y-1/2 text-outline pointer-events-none text-[20px] z-10">search</span>
         <input type="text" placeholder="Buscar proyectos, clientes o tareas..."
+            x-model="query"
+            @input="search(); open = true"
+            @focus="open = true"
+            @keydown.escape="open = false"
+            autocomplete="off"
             class="w-full pl-[44px] pr-md py-sm bg-surface-container-low border border-outline-variant rounded-lg font-body-md text-body-md text-on-surface placeholder:text-outline focus:ring-2 focus:ring-primary focus:border-primary focus:bg-surface-container-lowest transition-all outline-none" />
+
+        {{-- Dropdown de resultados --}}
+        <div x-show="open && (results.length > 0 || isLoading || query.length >= 2)"
+            x-cloak
+            @click.stop
+            class="absolute left-0 right-0 top-full mt-sm bg-surface-container-lowest border border-outline-variant rounded-xl shadow-lg overflow-hidden z-50 max-h-[480px] overflow-y-auto">
+
+            {{-- Loading --}}
+            <div x-show="isLoading" class="p-md text-center">
+                <span class="font-body-sm text-body-sm text-on-surface-variant">Buscando...</span>
+            </div>
+
+            {{-- Sin resultados --}}
+            <div x-show="!isLoading && query.length >= 2 && results.length === 0"
+                class="p-md text-center">
+                <span class="material-symbols-outlined text-[32px] text-outline">search_off</span>
+                <p class="font-body-sm text-body-sm text-on-surface-variant mt-sm">No se encontraron resultados</p>
+            </div>
+
+            {{-- Resultados --}}
+            <template x-for="r in results" :key="r.type + '-' + r.id">
+                <a :href="r.url"
+                    class="flex items-center gap-md px-md py-sm hover:bg-surface-container transition-colors border-b border-outline-variant/50 last:border-b-0">
+                    <div class="shrink-0 w-10 h-10 rounded-lg flex items-center justify-center"
+                        :class="r.badge_variant === 'primary' ? 'bg-primary-container text-on-primary-container' : (r.badge_variant === 'secondary' ? 'bg-secondary-container text-on-secondary-container' : 'bg-tertiary-container text-on-tertiary-container')">
+                        <span class="material-symbols-outlined text-[20px]" x-text="r.icon"></span>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <p class="font-label-md text-label-md text-on-surface truncate" x-text="r.title"></p>
+                        <p class="font-body-sm text-body-sm text-on-surface-variant truncate" x-text="r.subtitle"></p>
+                    </div>
+                    <span class="shrink-0 px-sm py-xs rounded-full font-label-sm text-label-sm"
+                        :class="badgeClasses(r.badge_variant)"
+                        x-text="r.type_label"></span>
+                </a>
+            </template>
+        </div>
     </div>
 
     {{-- Actions --}}

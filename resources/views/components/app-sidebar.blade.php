@@ -42,15 +42,8 @@
         </ul>
     </nav>
 
-    {{-- Footer: New Project + Help + Logout --}}
+    {{-- Footer: Help + Logout --}}
     <div class="px-sm py-md border-t border-outline-variant space-y-sm">
-
-        {{-- + New Project --}}
-        <a href="{{ route('proyectos.index') }}"
-            class="flex items-center justify-center gap-sm w-full px-md py-sm rounded-lg font-label-md text-label-md bg-primary text-on-primary hover:bg-black transition-colors">
-            <span class="material-symbols-outlined text-[18px]">add</span>
-            <span>New Project</span>
-        </a>
 
         {{-- Help --}}
         <a href="#" class="flex items-center gap-md px-md py-sm rounded-lg font-body-sm text-body-sm text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors">
