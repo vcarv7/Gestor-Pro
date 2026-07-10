@@ -47,6 +47,11 @@ class Proyecto extends Model
         return $this->hasMany(Tarea::class);
     }
 
+    public function archivos(): HasMany
+    {
+        return $this->hasMany(Archivo::class);
+    }
+
     public function tareasPendientes(): HasMany
     {
         return $this->hasMany(Tarea::class)->where('completada', false);

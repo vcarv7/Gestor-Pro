@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\ArchivoAdjuntoController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Auth\NewPasswordController;
 use App\Http\Controllers\Auth\PasswordResetLinkController;
@@ -52,6 +53,14 @@ Route::middleware('auth')->group(function () {
     // Exportar proyecto a PDF
     Route::get('proyectos/{proyecto}/pdf', [ProyectoController::class, 'exportPdf'])
         ->name('proyectos.pdf');
+
+    // Archivos adjuntos de proyectos
+    Route::post('proyectos/{proyecto}/archivos', [ArchivoAdjuntoController::class, 'store'])
+        ->name('proyectos.archivos.store');
+    Route::get('archivos/{archivo}/descargar', [ArchivoAdjuntoController::class, 'download'])
+        ->name('archivos.download');
+    Route::delete('archivos/{archivo}', [ArchivoAdjuntoController::class, 'destroy'])
+        ->name('archivos.destroy');
 
     // ============================================================================
     // TAREAS (anidadas en proyectos, shallow routes)
