@@ -54,9 +54,11 @@ Route::middleware('auth')->group(function () {
     // ============================================================================
     Route::resource('proyectos.tareas', TareaController::class)->shallow();
 
-    // Bulk delete de tareas (ruta con {proyecto} para autorización)
-    Route::delete('proyectos/{proyecto}/tareas/bulk', [TareaController::class, 'bulkDestroy'])
-        ->name('proyectos.tareas.bulk-destroy');
+    // Acciones bulk sobre todas las tareas de un proyecto
+    Route::patch('proyectos/{proyecto}/tareas/complete-all', [TareaController::class, 'completeAll'])
+        ->name('proyectos.tareas.complete-all');
+    Route::delete('proyectos/{proyecto}/tareas/destroy-all', [TareaController::class, 'destroyAll'])
+        ->name('proyectos.tareas.destroy-all');
 
     // ============================================================================
     // AUDITORIA (DB real, auto-logging via model events)

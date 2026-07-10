@@ -1,50 +1,6 @@
 <x-app-layout>
     <x-slot:title>{{ $proyecto->titulo }}</x-slot:title>
 
-    @push('scripts')
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const selectAll = document.getElementById('select-all');
-            const checks = document.querySelectorAll('.tarea-check');
-            const bulkBtn = document.getElementById('bulk-delete-btn');
-            const countSpan = document.getElementById('bulk-count');
-            const bulkForm = document.getElementById('bulk-form');
-            const bulkIdsInput = document.getElementById('bulk-ids-input');
-
-            function updateBulkState() {
-                const selected = [...checks].filter(c => c.checked).map(c => c.value);
-                countSpan.textContent = selected.length;
-                bulkBtn.classList.toggle('hidden', selected.length === 0);
-                if (selectAll) {
-                    selectAll.checked = selected.length > 0 && selected.length === checks.length;
-                    selectAll.indeterminate = selected.length > 0 && selected.length < checks.length;
-                }
-            }
-
-            selectAll?.addEventListener('change', () => {
-                checks.forEach(c => c.checked = selectAll.checked);
-                updateBulkState();
-            });
-
-            checks.forEach(c => c.addEventListener('change', updateBulkState));
-
-            bulkForm?.addEventListener('submit', (e) => {
-                const selected = [...checks].filter(c => c.checked).map(c => c.value);
-                if (selected.length === 0) {
-                    e.preventDefault();
-                    alert('Seleccioná al menos una tarea.');
-                    return;
-                }
-                if (!confirm(`¿Eliminar ${selected.length} tarea(s) seleccionada(s)?`)) {
-                    e.preventDefault();
-                    return;
-                }
-                bulkIdsInput.value = JSON.stringify(selected);
-            });
-        });
-    </script>
-    @endpush
-
     <div class="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-lg">
 
         {{-- MAIN --}}
@@ -154,31 +110,40 @@
 
                 @if ($proyecto->tareas->count() > 0)
                     {{-- Bulk actions bar --}}
-                    <div class="px-lg py-md bg-surface-container border-b border-outline-variant flex items-center justify-between">
-                        <label class="flex items-center gap-sm cursor-pointer">
-                            <input type="checkbox" id="select-all"
-                                class="w-4 h-4 rounded border-outline-variant text-primary focus:ring-primary cursor-pointer">
-                            <span class="font-label-md text-label-md text-on-surface">Seleccionar todas</span>
-                        </label>
-                        <form id="bulk-form" method="POST" action="{{ route('proyectos.tareas.bulk-destroy', $proyecto) }}" class="inline">
-                            @csrf
-                            @method('DELETE')
-                            <input type="hidden" name="tarea_ids" id="bulk-ids-input" value="">
-                            <button type="submit" id="bulk-delete-btn"
-                                class="hidden inline-flex items-center gap-sm px-md py-sm rounded-lg bg-error text-on-error-container font-label-md text-label-md hover:bg-error/90 transition-colors">
-                                <span class="material-symbols-outlined text-[18px]">delete</span>
-                                Eliminar seleccionadas (<span id="bulk-count">0</span>)
-                            </button>
-                        </form>
+                    <div class="px-lg py-md bg-surface-container border-b border-outline-variant flex items-center justify-between flex-wrap gap-sm">
+                        <div class="flex items-center gap-sm">
+                            <span class="font-label-md text-label-md text-on-surface">
+                                {{ $proyecto->tareas->count() }} tarea(s) en total
+                            </span>
+                            <span class="text-outline">•</span>
+                            <span class="font-label-md text-label-md text-on-surface-variant">
+                                {{ $proyecto->tareas->where('completada', true)->count() }} completada(s)
+                            </span>
+                        </div>
+                        <div class="flex items-center gap-sm">
+                            <form method="POST" action="{{ route('proyectos.tareas.complete-all', $proyecto) }}" onsubmit="return confirm('¿Marcar todas las tareas pendientes como completadas?')">
+                                @csrf
+                                @method('PATCH')
+                                <button type="submit" class="inline-flex items-center gap-sm px-md py-sm rounded-lg border border-primary text-primary font-label-md text-label-md hover:bg-primary-container transition-colors">
+                                    <span class="material-symbols-outlined text-[18px]">done_all</span>
+                                    Marcar todas como cumplidas
+                                </button>
+                            </form>
+                            <form method="POST" action="{{ route('proyectos.tareas.destroy-all', $proyecto) }}" onsubmit="return confirm('¿Eliminar TODAS las tareas del proyecto? Esta acción no se puede deshacer.')">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="inline-flex items-center gap-sm px-md py-sm rounded-lg border border-error text-error font-label-md text-label-md hover:bg-error-container transition-colors">
+                                    <span class="material-symbols-outlined text-[18px]">delete_sweep</span>
+                                    Eliminar todas las tareas
+                                </button>
+                            </form>
+                        </div>
                     </div>
                 @endif
 
                 <ul class="divide-y divide-outline-variant">
                     @forelse ($proyecto->tareas as $tarea)
                         <li class="flex items-center gap-md p-lg {{ $tarea->completada ? 'opacity-60' : '' }}">
-                            {{-- Checkbox de selección --}}
-                            <input type="checkbox" value="{{ $tarea->id }}" class="tarea-check w-4 h-4 rounded border-outline-variant text-primary focus:ring-primary cursor-pointer">
-
                             {{-- Toggle completada (form separado) --}}
                             <form method="POST" action="{{ route('tareas.update', $tarea) }}" id="toggle-{{ $tarea->id }}" class="contents">
                                 @csrf

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Helpers\Notifier;
 use App\Http\Requests\StoreTareaRequest;
 use App\Http\Requests\UpdateTareaRequest;
+use App\Models\Actividad;
 use App\Models\Proyecto;
 use App\Models\Tarea;
 use Illuminate\Http\RedirectResponse;
@@ -74,7 +75,7 @@ class TareaController extends Controller
     {
         $this->authorizeTareaOwner($tarea);
         $proyectoId = $tarea->proyecto_id;
-        $titulo = $tarea->titulo;
+        $titulo = $tarea->nombre;
         $tarea->delete();
 
         Notifier::notify(auth()->user(), 'tarea_bulk_delete', 'Tarea eliminada', "Se eliminó la tarea: {$titulo}");
@@ -84,27 +85,44 @@ class TareaController extends Controller
             ->with('status', 'Tarea eliminada.');
     }
 
-    // Bulk delete: con {proyecto} en URL (no shallow) porque necesita autorización
+    // Acciones bulk sobre todas las tareas de un proyecto
 
-    public function bulkDestroy(Request $request, Proyecto $proyecto): RedirectResponse
+    public function completeAll(Proyecto $proyecto): RedirectResponse
     {
         $this->authorizeProyectoOwner($proyecto);
 
-        $request->validate([
-            'tarea_ids' => ['required', 'string'],  // viene como JSON string desde el form
-        ]);
+        $count = Tarea::where('user_id', auth()->id())
+            ->where('proyecto_id', $proyecto->id)
+            ->where('completada', false)
+            ->update(['completada' => true]);
 
-        $ids = json_decode($request->input('tarea_ids'), true) ?? [];
-        if (!is_array($ids) || empty($ids)) {
-            return back()->withErrors(['tarea_ids' => 'No se seleccionaron tareas.']);
-        }
+        return redirect()
+            ->route('proyectos.show', $proyecto)
+            ->with('status', "{$count} tarea(s) marcada(s) como completadas.");
+    }
 
-        $count = Tarea::whereIn('id', $ids)
-            ->where('user_id', auth()->id())
+    public function destroyAll(Proyecto $proyecto): RedirectResponse
+    {
+        $this->authorizeProyectoOwner($proyecto);
+
+        $count = Tarea::where('user_id', auth()->id())
+            ->where('proyecto_id', $proyecto->id)
+            ->count();
+
+        Tarea::where('user_id', auth()->id())
             ->where('proyecto_id', $proyecto->id)
             ->delete();
 
-        Notifier::notify(auth()->user(), 'tarea_bulk_delete', 'Tareas eliminadas', "Se eliminaron {$count} tarea(s) del proyecto: {$proyecto->nombre}");
+        Actividad::create([
+            'user_id' => auth()->id(),
+            'action' => 'delete_all',
+            'subject_type' => Proyecto::class,
+            'subject_id' => $proyecto->id,
+            'subject_label' => $proyecto->titulo,
+            'description' => "{$count} tarea(s) eliminada(s)",
+        ]);
+
+        Notifier::notify(auth()->user(), 'tarea_bulk_delete', 'Tareas eliminadas', "Se eliminaron {$count} tarea(s) del proyecto: {$proyecto->titulo}");
 
         return redirect()
             ->route('proyectos.show', $proyecto)
