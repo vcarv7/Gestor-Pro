@@ -35,16 +35,6 @@
                             <span class="material-symbols-outlined text-[18px]">edit</span>
                             Editar
                         </a>
-                        <button type="button"
-                            onclick="document.getElementById('form-eliminar').submit()"
-                            class="inline-flex items-center gap-sm px-md py-sm rounded-lg border border-error text-error font-label-md text-label-md hover:bg-error-container transition-colors">
-                            <span class="material-symbols-outlined text-[18px]">delete</span>
-                            Eliminar
-                        </button>
-                        <form id="form-eliminar" method="POST" action="{{ route('proyectos.destroy', $proyecto) }}" class="hidden">
-                            @csrf
-                            @method('DELETE')
-                        </form>
                     </div>
                 </div>
             </div>
@@ -193,7 +183,7 @@
 
         {{-- RIGHT SIDEBAR: Archivos Adjuntos (mock) --}}
         <aside>
-            @include('partials.proyecto-archivos')
+            @include('partials.proyecto-archivos', ['proyecto' => $proyecto])
         </aside>
 
     </div>

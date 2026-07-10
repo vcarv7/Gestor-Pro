@@ -1,4 +1,25 @@
 <div class="login-card rounded-xl p-lg">
+    {{-- Acciones del Proyecto --}}
+    <div class="mb-lg space-y-sm">
+        <a href="{{ route('proyectos.pdf', $proyecto) }}"
+            class="w-full inline-flex items-center justify-center gap-sm px-md py-sm rounded-lg border border-primary text-primary font-label-md text-label-md hover:bg-primary-container transition-colors">
+            <span class="material-symbols-outlined text-[18px]">picture_as_pdf</span>
+            Exportar a PDF
+        </a>
+        <button type="button"
+            onclick="if (confirm('¿Eliminar este proyecto? Se eliminarán también todas sus tareas. Esta acción no se puede deshacer.')) document.getElementById('form-eliminar-proyecto').submit()"
+            class="w-full inline-flex items-center justify-center gap-sm px-md py-sm rounded-lg border border-error text-error font-label-md text-label-md hover:bg-error-container transition-colors">
+            <span class="material-symbols-outlined text-[18px]">delete</span>
+            Eliminar proyecto
+        </button>
+        <form id="form-eliminar-proyecto" method="POST" action="{{ route('proyectos.destroy', $proyecto) }}" class="hidden">
+            @csrf
+            @method('DELETE')
+        </form>
+    </div>
+
+    <div class="border-t border-outline-variant mb-lg"></div>
+
     <h3 class="font-headline-sm text-headline-sm text-on-surface mb-md">Archivos Adjuntos</h3>
 
     {{-- Upload zone --}}

@@ -49,6 +49,10 @@ Route::middleware('auth')->group(function () {
     // ============================================================================
     Route::resource('proyectos', ProyectoController::class);
 
+    // Exportar proyecto a PDF
+    Route::get('proyectos/{proyecto}/pdf', [ProyectoController::class, 'exportPdf'])
+        ->name('proyectos.pdf');
+
     // ============================================================================
     // TAREAS (anidadas en proyectos, shallow routes)
     // ============================================================================
