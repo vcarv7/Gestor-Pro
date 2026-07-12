@@ -22,7 +22,7 @@ class ArchivoAdjuntoController extends Controller
         $extension = $file->getClientOriginalExtension();
         $nombreStorage = "{$uuid}.{$extension}";
 
-        $file->storeAs("proyectos/{$proyecto->id}", $nombreStorage, 'local');
+        $file->storeAs("proyectos/{$proyecto->id}", $nombreStorage, 'r2');
 
         $archivo = $proyecto->archivos()->create([
             'user_id' => auth()->id(),
@@ -53,11 +53,11 @@ class ArchivoAdjuntoController extends Controller
 
         $path = "proyectos/{$archivo->proyecto_id}/{$archivo->nombre_storage}";
 
-        if (! Storage::disk('local')->exists($path)) {
+        if (! Storage::disk('r2')->exists($path)) {
             abort(404, 'El archivo ya no existe en el servidor.');
         }
 
-        return Storage::disk('local')->download($path, $archivo->nombre_original);
+        return Storage::disk('r2')->download($path, $archivo->nombre_original);
     }
 
     public function destroy(Archivo $archivo): RedirectResponse
@@ -67,7 +67,7 @@ class ArchivoAdjuntoController extends Controller
         }
 
         $path = "proyectos/{$archivo->proyecto_id}/{$archivo->nombre_storage}";
-        Storage::disk('local')->delete($path);
+        Storage::disk('r2')->delete($path);
 
         $nombreOriginal = $archivo->nombre_original;
         $archivo->delete();
