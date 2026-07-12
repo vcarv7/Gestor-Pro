@@ -27,7 +27,14 @@ class NotificationsController extends Controller
         $recent = $user->notifications()
             ->orderBy('created_at', 'desc')
             ->limit(5)
-            ->get(['id', 'title', 'message', 'read_at', 'created_at']);
+            ->get(['id', 'title', 'message', 'read_at', 'created_at'])
+            ->map(fn ($n) => [
+                'id' => $n->id,
+                'title' => $n->title,
+                'message' => $n->message,
+                'read_at' => $n->read_at?->toIso8601String(),
+                'created_at' => $n->created_at->toIso8601String(),
+            ]);
 
         $unreadCount = $user->notifications()->unread()->count();
 

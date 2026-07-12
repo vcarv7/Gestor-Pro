@@ -196,12 +196,19 @@ if (strlen($initials) >= 2) break;
 @push('scripts')
 <script>
     function timeAgo(dateStr) {
+        if (!dateStr) return '';
+        const date = new Date(dateStr.replace(' ', 'T'));
+        if (isNaN(date.getTime())) return '';
+
         const now = new Date();
-        const date = new Date(dateStr + 'Z');
         const diff = Math.floor((now - date) / 1000);
-        if (diff < 60) return 'ahora';
+
+        if (diff < 5) return 'ahora';
+        if (diff < 0) return date.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' });
+        if (diff < 60) return diff + ' s';
         if (diff < 3600) return Math.floor(diff / 60) + ' min';
         if (diff < 86400) return Math.floor(diff / 3600) + ' h';
+        if (diff < 604800) return Math.floor(diff / 86400) + ' d';
         return date.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' });
     }
 </script>

@@ -7,7 +7,10 @@ use App\Http\Requests\StoreProyectoRequest;
 use App\Http\Requests\UpdateProyectoRequest;
 use App\Models\Cliente;
 use App\Models\Proyecto;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Response;
+use Illuminate\Support\Str;
 use Illuminate\View\View;
 
 class ProyectoController extends Controller
@@ -65,7 +68,7 @@ class ProyectoController extends Controller
     public function destroy(Proyecto $proyecto): RedirectResponse
     {
         $this->authorizeOwner($proyecto);
-        $nombre = $proyecto->nombre;
+        $nombre = $proyecto->titulo;
         $proyecto->delete();
 
         Notifier::notify(auth()->user(), 'proyecto_delete', 'Proyecto eliminado', "Se eliminó el proyecto: {$nombre}");
@@ -73,6 +76,20 @@ class ProyectoController extends Controller
         return redirect()
             ->route('proyectos.index')
             ->with('status', 'Proyecto eliminado.');
+    }
+
+    public function exportPdf(Proyecto $proyecto): Response
+    {
+        $this->authorizeOwner($proyecto);
+
+        $proyecto->load(['cliente', 'tareas' => fn ($q) => $q->orderBy('completada')->orderBy('fecha_limite')]);
+
+        $pdf = Pdf::loadView('proyectos.pdf', compact('proyecto'));
+        $pdf->setPaper('letter', 'portrait');
+
+        $filename = 'proyecto-' . Str::slug($proyecto->titulo) . '.pdf';
+
+        return $pdf->download($filename);
     }
 
     private function getMisClientes()

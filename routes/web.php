@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\ArchivoAdjuntoController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Auth\NewPasswordController;
 use App\Http\Controllers\Auth\PasswordResetLinkController;
@@ -49,14 +50,28 @@ Route::middleware('auth')->group(function () {
     // ============================================================================
     Route::resource('proyectos', ProyectoController::class);
 
+    // Exportar proyecto a PDF
+    Route::get('proyectos/{proyecto}/pdf', [ProyectoController::class, 'exportPdf'])
+        ->name('proyectos.pdf');
+
+    // Archivos adjuntos de proyectos
+    Route::post('proyectos/{proyecto}/archivos', [ArchivoAdjuntoController::class, 'store'])
+        ->name('proyectos.archivos.store');
+    Route::get('archivos/{archivo}/descargar', [ArchivoAdjuntoController::class, 'download'])
+        ->name('archivos.download');
+    Route::delete('archivos/{archivo}', [ArchivoAdjuntoController::class, 'destroy'])
+        ->name('archivos.destroy');
+
     // ============================================================================
     // TAREAS (anidadas en proyectos, shallow routes)
     // ============================================================================
     Route::resource('proyectos.tareas', TareaController::class)->shallow();
 
-    // Bulk delete de tareas (ruta con {proyecto} para autorización)
-    Route::delete('proyectos/{proyecto}/tareas/bulk', [TareaController::class, 'bulkDestroy'])
-        ->name('proyectos.tareas.bulk-destroy');
+    // Acciones bulk sobre todas las tareas de un proyecto
+    Route::patch('proyectos/{proyecto}/tareas/complete-all', [TareaController::class, 'completeAll'])
+        ->name('proyectos.tareas.complete-all');
+    Route::delete('proyectos/{proyecto}/tareas/destroy-all', [TareaController::class, 'destroyAll'])
+        ->name('proyectos.tareas.destroy-all');
 
     // ============================================================================
     // AUDITORIA (DB real, auto-logging via model events)
