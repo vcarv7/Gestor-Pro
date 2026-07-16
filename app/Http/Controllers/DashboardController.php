@@ -7,6 +7,7 @@ use App\Models\Proyecto;
 use App\Models\Tarea;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
 class DashboardController extends Controller
@@ -17,14 +18,31 @@ class DashboardController extends Controller
         $now = now();
         $startOfWeek = $now->copy()->startOfWeek();
 
-        // 1) Stat cards
-        $totalClientes = Cliente::where('user_id', $userId)->count();
-        $proyectosActivos = Proyecto::where('user_id', $userId)
-            ->where('estado', 'en_progreso')->count();
-        $tareasPendientes = Tarea::where('user_id', $userId)
-            ->where('completada', false)->count();
+        $stats = DB::selectOne(
+            "SELECT
+                total_clientes,
+                proyectos_activos,
+                tareas_pendientes,
+                total_tareas,
+                tareas_completadas,
+                total_archivos
+             FROM v_dashboard_stats
+             WHERE user_id = ?",
+            [$userId]
+        ) ?: (object) [
+            'total_clientes' => 0,
+            'proyectos_activos' => 0,
+            'tareas_pendientes' => 0,
+            'total_tareas' => 0,
+            'tareas_completadas' => 0,
+            'total_archivos' => 0,
+        ];
 
-        // 2) Chart: proyectos por mes (últimos 6)
+        $totalClientes = $stats->total_clientes;
+        $proyectosActivos = $stats->proyectos_activos;
+        $tareasPendientes = $stats->tareas_pendientes;
+        $tareasTotales = $stats->total_tareas;
+
         $proyectosPorMes = collect();
         for ($i = 5; $i >= 0; $i--) {
             $mes = $now->copy()->subMonths($i);
@@ -38,7 +56,6 @@ class DashboardController extends Controller
             ]);
         }
 
-        // 3) Tareas urgentes: top 5 Alta con fecha_limite próxima
         $tareasUrgentes = Tarea::with('proyecto')
             ->where('user_id', $userId)
             ->where('completada', false)
@@ -48,17 +65,14 @@ class DashboardController extends Controller
             ->limit(5)
             ->get();
 
-        // 4) Progreso semanal
         $tareasCompletadasSemana = Tarea::where('user_id', $userId)
             ->where('completada', true)
             ->where('updated_at', '>=', $startOfWeek)
             ->count();
-        $tareasTotales = Tarea::where('user_id', $userId)->count();
         $progresoSemanal = $tareasTotales > 0
             ? (int) round(($tareasCompletadasSemana / $tareasTotales) * 100)
             : 0;
 
-        // 5) Actividad reciente: mezclar últimos items creados
         $actividad = collect();
 
         if ($ultimoCliente = Cliente::where('user_id', $userId)->latest('created_at')->first()) {
@@ -97,7 +111,6 @@ class DashboardController extends Controller
             ]);
         }
 
-        // Ordenar por fecha DESC y tomar 5
         $actividadReciente = $actividad
             ->sortByDesc('fecha')
             ->take(5)
