@@ -45,11 +45,14 @@
     {{-- Footer: Help + Logout --}}
     <div class="px-sm py-md border-t border-outline-variant space-y-sm">
 
-        {{-- Help --}}
-        <a href="#" class="flex items-center gap-md px-md py-sm rounded-lg font-body-sm text-body-sm text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors">
-            <span class="material-symbols-outlined text-[18px]">help</span>
-            <span>Help</span>
-        </a>
+        {{-- Versión --}}
+        <div class="flex items-center gap-md px-md py-sm font-body-sm text-body-sm text-on-surface-variant">
+            <span class="material-symbols-outlined text-[18px]">info</span>
+            <div class="flex-1 min-w-0">
+                <p class="font-label-sm text-label-sm text-on-surface">Mi Gestor Pro</p>
+                <p class="font-label-xs text-label-xs text-outline">v1.0.0</p>
+            </div>
+        </div>
 
         {{-- Logout --}}
         <form method="POST" action="{{ route('logout') }}">
