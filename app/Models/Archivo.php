@@ -2,11 +2,17 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 
 class Archivo extends Model
 {
+    use HasFactory, SoftDeletes;
+
     protected $table = 'archivos';
 
     protected $fillable = [
@@ -46,6 +52,18 @@ class Archivo extends Model
             return round($bytes / 1024, 1) . ' KB';
         }
         return $bytes . ' B';
+    }
+
+    protected static function booted()
+    {
+        if (! Auth::id()) {
+            return;
+        }
+
+        $clearCache = fn () => Cache::forget('dashboard_stats_' . Auth::id());
+
+        static::created(fn ($m) => $clearCache());
+        static::deleted(fn ($m) => $clearCache());
     }
 
     public function getIconoAttribute(): string

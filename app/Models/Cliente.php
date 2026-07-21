@@ -5,11 +5,13 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 
 class Cliente extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
     protected $fillable = [
         'user_id',
@@ -60,8 +62,10 @@ class Cliente extends Model
             ]);
         };
 
-        static::created(fn ($m) => $log($m, 'create'));
-        static::updated(fn ($m) => $log($m, 'update'));
-        static::deleted(fn ($m) => $log($m, 'delete'));
+        $clearCache = fn () => Cache::forget('dashboard_stats_' . Auth::id());
+
+        static::created(function ($m) use ($log, $clearCache) { $log($m, 'create'); $clearCache(); });
+        static::updated(function ($m) use ($log, $clearCache) { $log($m, 'update'); $clearCache(); });
+        static::deleted(function ($m) use ($log, $clearCache) { $log($m, 'delete'); $clearCache(); });
     }
 }

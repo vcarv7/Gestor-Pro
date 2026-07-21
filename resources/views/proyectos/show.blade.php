@@ -11,6 +11,23 @@
                 Volver a Proyectos
             </a>
 
+            @if ($proyecto->trashed())
+                <div class="rounded-xl p-md bg-error-container border border-error flex items-center gap-md">
+                    <span class="material-symbols-outlined text-on-error-container text-[24px]">delete</span>
+                    <div class="flex-1">
+                        <p class="font-body-md text-body-md text-on-error-container font-semibold">Proyecto en la papelera</p>
+                        <p class="font-body-sm text-body-sm text-on-error-container">Este proyecto fue eliminado y está en la papelera.</p>
+                    </div>
+                    <form method="POST" action="{{ route('proyectos.restore', $proyecto->id) }}" class="inline">
+                        @csrf
+                        @method('PATCH')
+                        <button type="submit" class="px-md py-sm rounded-lg bg-primary text-on-primary font-label-md text-label-md hover:bg-black transition-colors">
+                            Restaurar
+                        </button>
+                    </form>
+                </div>
+            @endif
+
             {{-- Flash --}}
             @if (session('status'))
                 <div class="login-card rounded-xl p-md bg-secondary-container border-secondary-fixed">
@@ -131,10 +148,14 @@
                     </div>
                 @endif
 
+                @php
+                    $tareasActivas = $proyecto->tareas->filter(fn($t) => !$t->trashed());
+                    $tareasPapelera = $proyecto->tareas->filter(fn($t) => $t->trashed());
+                @endphp
+
                 <ul class="divide-y divide-outline-variant">
-                    @forelse ($proyecto->tareas as $tarea)
+                    @forelse ($tareasActivas as $tarea)
                         <li class="flex items-center gap-md p-lg {{ $tarea->completada ? 'opacity-60' : '' }}">
-                            {{-- Toggle completada (form separado) --}}
                             <form method="POST" action="{{ route('tareas.update', $tarea) }}" id="toggle-{{ $tarea->id }}" class="contents">
                                 @csrf
                                 @method('PATCH')
@@ -160,7 +181,7 @@
                                 class="text-on-surface-variant hover:text-primary p-sm rounded-md hover:bg-surface-container-high transition-colors">
                                 <span class="material-symbols-outlined text-[20px]">edit</span>
                             </a>
-                            <form method="POST" action="{{ route('tareas.destroy', $tarea) }}" class="inline" onsubmit="return confirm('¿Eliminar tarea?')">
+                            <form method="POST" action="{{ route('tareas.destroy', $tarea) }}" class="inline" onsubmit="return confirm('¿Mover tarea a la papelera?')">
                                 @csrf
                                 @method('DELETE')
                                 <button type="submit" class="text-on-surface-variant hover:text-error p-sm rounded-md hover:bg-surface-container-high transition-colors">
@@ -170,13 +191,43 @@
                         </li>
                     @empty
                         <li class="p-lg text-center">
-                            <p class="font-body-md text-body-md text-on-surface-variant">No hay tareas todavía.</p>
-                            <a href="{{ route('proyectos.tareas.create', $proyecto) }}" class="inline-block mt-sm font-label-md text-label-md text-primary hover:underline">
-                                Crear la primera
-                            </a>
+                            <p class="font-body-md text-body-md text-on-surface-variant">No hay tareas activas.</p>
                         </li>
                     @endforelse
                 </ul>
+
+                @if ($tareasPapelera->isNotEmpty())
+                    <div class="border-t border-outline-variant px-lg py-md bg-surface-container">
+                        <details class="group">
+                            <summary class="flex items-center gap-sm cursor-pointer font-label-md text-label-md text-on-surface-variant hover:text-on-surface">
+                                <span class="material-symbols-outlined text-[18px] group-open:rotate-90 transition-transform">chevron_right</span>
+                                Tareas en papelera ({{ $tareasPapelera->count() }})
+                            </summary>
+                            <ul class="mt-md space-y-sm">
+                                @foreach ($tareasPapelera as $tarea)
+                                    <li class="flex items-center gap-md p-sm rounded-md bg-surface-container-high">
+                                        <span class="material-symbols-outlined text-on-surface-variant text-[18px]">delete</span>
+                                        <span class="flex-1 font-body-sm text-body-sm text-on-surface-variant line-through">{{ $tarea->nombre }}</span>
+                                        <form method="POST" action="{{ route('tareas.restore', $tarea->id) }}" class="inline">
+                                            @csrf
+                                            @method('PATCH')
+                                            <button type="submit" class="text-primary hover:text-on-primary-container font-label-sm text-label-sm p-xs" title="Restaurar">
+                                                Restaurar
+                                            </button>
+                                        </form>
+                                        <form method="POST" action="{{ route('tareas.force-delete', $tarea->id) }}" class="inline" onsubmit="return confirm('¿Eliminar permanentemente esta tarea?')">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="text-error hover:text-error font-label-sm text-label-sm p-xs" title="Eliminar permanentemente">
+                                                Eliminar
+                                            </button>
+                                        </form>
+                                    </li>
+                                @endforeach
+                            </ul>
+                        </details>
+                    </div>
+                @endif
             </div>
 
         </div>

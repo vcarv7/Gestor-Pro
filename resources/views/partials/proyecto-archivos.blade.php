@@ -45,9 +45,14 @@
         </label>
     </form>
 
-    {{-- Lista de archivos --}}
+    @php
+        $archivosActivos = $proyecto->archivos->filter(fn($a) => !$a->trashed());
+        $archivosPapelera = $proyecto->archivos->filter(fn($a) => $a->trashed());
+    @endphp
+
+    {{-- Lista de archivos activos --}}
     <ul class="space-y-sm">
-        @forelse ($proyecto->archivos as $archivo)
+        @forelse ($archivosActivos as $archivo)
             <li class="flex items-center gap-sm p-sm border border-outline-variant rounded-lg hover:bg-surface-container transition-colors group">
                 <span class="material-symbols-outlined text-primary text-2xl">{{ $archivo->icono }}</span>
                 <div class="flex-1 min-w-0">
@@ -63,7 +68,7 @@
                     title="Descargar">
                     <span class="material-symbols-outlined text-[20px]">download</span>
                 </a>
-                <form method="POST" action="{{ route('archivos.destroy', $archivo) }}" onsubmit="return confirm('¿Eliminar este archivo?')">
+                <form method="POST" action="{{ route('archivos.destroy', $archivo) }}" onsubmit="return confirm('¿Mover archivo a la papelera?')">
                     @csrf
                     @method('DELETE')
                     <button type="submit"
@@ -76,8 +81,37 @@
         @empty
             <li class="text-center py-md">
                 <p class="font-body-sm text-body-sm text-on-surface-variant">No hay archivos adjuntos.</p>
-                <p class="font-body-xs text-body-xs text-outline mt-xs">Sube tu primer briefing arriba.</p>
             </li>
         @endforelse
     </ul>
+
+    {{-- Archivos en papelera --}}
+    @if ($archivosPapelera->isNotEmpty())
+        <div class="mt-md pt-md border-t border-outline-variant">
+            <details class="group">
+                <summary class="flex items-center gap-sm cursor-pointer font-label-sm text-label-sm text-on-surface-variant hover:text-on-surface">
+                    <span class="material-symbols-outlined text-[16px] group-open:rotate-90 transition-transform">chevron_right</span>
+                    Archivos eliminados ({{ $archivosPapelera->count() }})
+                </summary>
+                <ul class="mt-sm space-y-sm">
+                    @foreach ($archivosPapelera as $archivo)
+                        <li class="flex items-center gap-sm p-sm rounded-md bg-surface-container">
+                            <span class="material-symbols-outlined text-on-surface-variant text-[18px]">delete</span>
+                            <span class="flex-1 font-body-sm text-body-sm text-on-surface-variant line-through truncate">{{ $archivo->nombre_original }}</span>
+                            <form method="POST" action="{{ route('archivos.restore', $archivo->id) }}" class="inline">
+                                @csrf
+                                @method('PATCH')
+                                <button type="submit" class="text-primary hover:text-on-primary-container font-label-sm text-label-sm p-xs">Restaurar</button>
+                            </form>
+                            <form method="POST" action="{{ route('archivos.force-delete', $archivo->id) }}" class="inline" onsubmit="return confirm('¿Eliminar permanentemente?')">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="text-error hover:text-error font-label-sm text-label-sm p-xs">Eliminar</button>
+                            </form>
+                        </li>
+                    @endforeach
+                </ul>
+            </details>
+        </div>
+    @endif
 </div>

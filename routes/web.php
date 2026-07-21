@@ -41,14 +41,18 @@ Route::middleware('auth')->group(function () {
     Route::get('/buscar', [SearchController::class, 'search'])->name('search');
 
     // ============================================================================
-    // CLIENTES (DB real, scope por user_id)
+    // CLIENTES
     // ============================================================================
     Route::resource('clientes', ClienteController::class);
+    Route::patch('clientes/{id}/restore', [ClienteController::class, 'restore'])->name('clientes.restore');
+    Route::delete('clientes/{id}/force', [ClienteController::class, 'forceDelete'])->name('clientes.force-delete');
 
     // ============================================================================
-    // PROYECTOS (DB real, scope por user_id)
+    // PROYECTOS
     // ============================================================================
     Route::resource('proyectos', ProyectoController::class);
+    Route::patch('proyectos/{id}/restore', [ProyectoController::class, 'restore'])->name('proyectos.restore');
+    Route::delete('proyectos/{id}/force', [ProyectoController::class, 'forceDelete'])->name('proyectos.force-delete');
 
     // Exportar proyecto a PDF
     Route::get('proyectos/{proyecto}/pdf', [ProyectoController::class, 'exportPdf'])
@@ -61,6 +65,8 @@ Route::middleware('auth')->group(function () {
         ->name('archivos.download');
     Route::delete('archivos/{archivo}', [ArchivoAdjuntoController::class, 'destroy'])
         ->name('archivos.destroy');
+    Route::patch('archivos/{id}/restore', [ArchivoAdjuntoController::class, 'restore'])->name('archivos.restore');
+    Route::delete('archivos/{id}/force', [ArchivoAdjuntoController::class, 'forceDelete'])->name('archivos.force-delete');
 
     // ============================================================================
     // TAREAS (anidadas en proyectos, shallow routes)
@@ -73,8 +79,12 @@ Route::middleware('auth')->group(function () {
     Route::delete('proyectos/{proyecto}/tareas/destroy-all', [TareaController::class, 'destroyAll'])
         ->name('proyectos.tareas.destroy-all');
 
+    // Restore / force delete de tareas (shallow, por id de tarea)
+    Route::patch('tareas/{id}/restore', [TareaController::class, 'restore'])->name('tareas.restore');
+    Route::delete('tareas/{id}/force', [TareaController::class, 'forceDelete'])->name('tareas.force-delete');
+
     // ============================================================================
-    // AUDITORIA (DB real, auto-logging via model events)
+    // AUDITORIA
     // ============================================================================
     Route::get('/auditoria', [AuditoriaController::class, 'index'])->name('auditoria.index');
 

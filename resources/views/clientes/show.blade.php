@@ -10,6 +10,23 @@
             </a>
         </div>
 
+        @if ($cliente->trashed())
+            <div class="rounded-xl p-md bg-error-container border border-error flex items-center gap-md">
+                <span class="material-symbols-outlined text-on-error-container text-[24px]">delete</span>
+                <div class="flex-1">
+                    <p class="font-body-md text-body-md text-on-error-container font-semibold">Cliente en la papelera</p>
+                    <p class="font-body-sm text-body-sm text-on-error-container">Este cliente fue eliminado y está en la papelera.</p>
+                </div>
+                <form method="POST" action="{{ route('clientes.restore', $cliente->id) }}" class="inline">
+                    @csrf
+                    @method('PATCH')
+                    <button type="submit" class="px-md py-sm rounded-lg bg-primary text-on-primary font-label-md text-label-md hover:bg-black transition-colors">
+                        Restaurar
+                    </button>
+                </form>
+            </div>
+        @endif
+
         {{-- Hero --}}
         <div class="login-card rounded-xl p-lg flex items-start gap-lg">
             <x-avatar :name="$cliente->nombre" size="lg" />

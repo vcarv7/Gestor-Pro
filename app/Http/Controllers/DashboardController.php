@@ -6,7 +6,7 @@ use App\Models\Cliente;
 use App\Models\Proyecto;
 use App\Models\Tarea;
 use Illuminate\Http\Request;
-use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
@@ -18,43 +18,58 @@ class DashboardController extends Controller
         $now = now();
         $startOfWeek = $now->copy()->startOfWeek();
 
-        $stats = DB::selectOne(
-            "SELECT
-                total_clientes,
-                proyectos_activos,
-                tareas_pendientes,
-                total_tareas,
-                tareas_completadas,
-                total_archivos
-             FROM v_dashboard_stats
-             WHERE user_id = ?",
-            [$userId]
-        ) ?: (object) [
-            'total_clientes' => 0,
-            'proyectos_activos' => 0,
-            'tareas_pendientes' => 0,
-            'total_tareas' => 0,
-            'tareas_completadas' => 0,
-            'total_archivos' => 0,
-        ];
+        $stats = Cache::remember("dashboard_stats_{$userId}", 300, function () use ($userId) {
+            $result = DB::selectOne(
+                "SELECT
+                    total_clientes,
+                    proyectos_activos,
+                    tareas_pendientes,
+                    total_tareas,
+                    tareas_completadas,
+                    total_archivos
+                 FROM v_dashboard_stats
+                 WHERE user_id = ?",
+                [$userId]
+            );
 
-        $totalClientes = $stats->total_clientes;
-        $proyectosActivos = $stats->proyectos_activos;
-        $tareasPendientes = $stats->tareas_pendientes;
-        $tareasTotales = $stats->total_tareas;
+            return $result
+                ? ['total_clientes' => $result->total_clientes, 'proyectos_activos' => $result->proyectos_activos, 'tareas_pendientes' => $result->tareas_pendientes, 'total_tareas' => $result->total_tareas, 'tareas_completadas' => $result->tareas_completadas, 'total_archivos' => $result->total_archivos]
+                : ['total_clientes' => 0, 'proyectos_activos' => 0, 'tareas_pendientes' => 0, 'total_tareas' => 0, 'tareas_completadas' => 0, 'total_archivos' => 0];
+        });
 
-        $proyectosPorMes = collect();
-        for ($i = 5; $i >= 0; $i--) {
-            $mes = $now->copy()->subMonths($i);
-            $count = Proyecto::where('user_id', $userId)
-                ->whereYear('created_at', $mes->year)
-                ->whereMonth('created_at', $mes->month)
-                ->count();
-            $proyectosPorMes->push([
-                'label' => $mes->format('M'),
-                'count' => $count,
-            ]);
-        }
+        $totalClientes = $stats['total_clientes'];
+        $proyectosActivos = $stats['proyectos_activos'];
+        $tareasPendientes = $stats['tareas_pendientes'];
+        $tareasTotales = $stats['total_tareas'];
+
+        $chartData = Cache::remember("dashboard_chart_{$userId}", 300, function () use ($userId, $now) {
+            $sixMonthsAgo = $now->copy()->subMonths(5)->startOfMonth();
+
+            $rows = DB::select(
+                "SELECT YEAR(created_at) AS year, MONTH(created_at) AS month, COUNT(*) AS count
+                 FROM proyectos
+                 WHERE user_id = ? AND created_at >= ?
+                 GROUP BY YEAR(created_at), MONTH(created_at)
+                 ORDER BY year ASC, month ASC",
+                [$userId, $sixMonthsAgo]
+            );
+
+            $lookup = collect($rows)->keyBy(fn ($r) => $r->year . '-' . str_pad($r->month, 2, '0', STR_PAD_LEFT));
+
+            $chart = [];
+            for ($i = 5; $i >= 0; $i--) {
+                $mes = $now->copy()->subMonths($i);
+                $key = $mes->year . '-' . str_pad($mes->month, 2, '0', STR_PAD_LEFT);
+                $chart[] = [
+                    'label' => $mes->format('M'),
+                    'count' => (int) ($lookup->get($key)?->count ?? 0),
+                ];
+            }
+
+            return $chart;
+        });
+
+        $proyectosPorMes = collect($chartData);
 
         $tareasUrgentes = Tarea::with('proyecto')
             ->where('user_id', $userId)

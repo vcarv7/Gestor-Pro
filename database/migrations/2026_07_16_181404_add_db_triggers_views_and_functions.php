@@ -7,14 +7,28 @@ return new class extends Migration
 {
     public function up(): void
     {
+        $driver = DB::connection()->getDriverName();
+
+        if ($driver === 'mysql') {
+            $this->createMySQLTriggers();
+            $this->createView();
+            $this->createMySQLFunction();
+        } elseif ($driver === 'sqlite') {
+            $this->createSQLiteTriggers();
+            $this->createView();
+        }
+    }
+
+    private function createMySQLTriggers(): void
+    {
         DB::unprepared('DROP TRIGGER IF EXISTS trg_user_create_settings');
-        DB::unprepared("
+        DB::unprepared('
             CREATE TRIGGER trg_user_create_settings
             AFTER INSERT ON users
             FOR EACH ROW
             INSERT INTO settings (user_id, created_at, updated_at)
-            VALUES (NEW.id, NOW(), NOW())
-        ");
+            VALUES (NEW.id, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+        ');
 
         DB::unprepared('DROP TRIGGER IF EXISTS trg_archivo_delete_log');
         DB::unprepared("
@@ -22,11 +36,11 @@ return new class extends Migration
             BEFORE DELETE ON archivos
             FOR EACH ROW
             INSERT INTO actividades (user_id, action, subject_type, subject_id, subject_label, description, created_at, updated_at)
-            VALUES (OLD.user_id, 'delete', 'App\\\\Models\\\\Archivo', OLD.id, OLD.nombre_original, 'Eliminacion directa por SQL', NOW(), NOW())
+            VALUES (OLD.user_id, 'delete', 'App\\\\Models\\\\Archivo', OLD.id, OLD.nombre_original, 'Eliminacion directa por SQL', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
         ");
 
         DB::unprepared('DROP TRIGGER IF EXISTS trg_tarea_complete_proyecto');
-        DB::unprepared("
+        DB::unprepared('
             CREATE TRIGGER trg_tarea_complete_proyecto
             AFTER UPDATE ON tareas
             FOR EACH ROW
@@ -38,13 +52,56 @@ return new class extends Migration
                     FROM tareas WHERE proyecto_id = NEW.proyecto_id;
                     IF total > 0 AND total = completadas THEN
                         UPDATE proyectos
-                        SET estado = 'completado', updated_at = NOW()
-                        WHERE id = NEW.proyecto_id AND estado != 'completado';
+                        SET estado = \'completado\', updated_at = CURRENT_TIMESTAMP
+                        WHERE id = NEW.proyecto_id AND estado != \'completado\';
                     END IF;
                 END IF;
             END
+        ');
+    }
+
+    private function createSQLiteTriggers(): void
+    {
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_user_create_settings');
+        DB::statement("
+            CREATE TRIGGER trg_user_create_settings
+            AFTER INSERT ON users
+            FOR EACH ROW
+            BEGIN
+                INSERT INTO settings (user_id, created_at, updated_at)
+                VALUES (NEW.id, datetime('now'), datetime('now'));
+            END
         ");
 
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_archivo_delete_log');
+        DB::statement("
+            CREATE TRIGGER trg_archivo_delete_log
+            BEFORE DELETE ON archivos
+            FOR EACH ROW
+            BEGIN
+                INSERT INTO actividades (user_id, action, subject_type, subject_id, subject_label, description, created_at, updated_at)
+                VALUES (OLD.user_id, 'delete', 'App\\Models\\Archivo', OLD.id, OLD.nombre_original, 'Eliminacion directa por SQL', datetime('now'), datetime('now'));
+            END
+        ");
+
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_tarea_complete_proyecto');
+        DB::statement("
+            CREATE TRIGGER trg_tarea_complete_proyecto
+            AFTER UPDATE ON tareas
+            FOR EACH ROW
+            WHEN NEW.completada = 1 AND OLD.completada = 0
+            BEGIN
+                UPDATE proyectos
+                SET estado = 'completado', updated_at = datetime('now')
+                WHERE id = NEW.proyecto_id
+                AND estado != 'completado'
+                AND (SELECT COUNT(*) FROM tareas WHERE proyecto_id = NEW.proyecto_id AND completada = 0) = 0;
+            END
+        ");
+    }
+
+    private function createView(): void
+    {
         DB::unprepared('DROP VIEW IF EXISTS v_dashboard_stats');
         DB::unprepared("
             CREATE VIEW v_dashboard_stats AS
@@ -59,9 +116,12 @@ return new class extends Migration
                 (SELECT COUNT(*) FROM archivos WHERE user_id = u.id) AS total_archivos
             FROM users u
         ");
+    }
 
+    private function createMySQLFunction(): void
+    {
         DB::unprepared('DROP FUNCTION IF EXISTS fn_proyecto_progreso');
-        DB::unprepared("
+        DB::unprepared('
             CREATE FUNCTION fn_proyecto_progreso(p_proyecto_id INT)
             RETURNS DECIMAL(5,2)
             DETERMINISTIC
@@ -73,7 +133,7 @@ return new class extends Migration
                 IF total = 0 THEN RETURN 0; END IF;
                 RETURN (completadas / total) * 100;
             END
-        ");
+        ');
     }
 
     public function down(): void
@@ -82,6 +142,9 @@ return new class extends Migration
         DB::unprepared('DROP TRIGGER IF EXISTS trg_archivo_delete_log');
         DB::unprepared('DROP TRIGGER IF EXISTS trg_tarea_complete_proyecto');
         DB::unprepared('DROP VIEW IF EXISTS v_dashboard_stats');
-        DB::unprepared('DROP FUNCTION IF EXISTS fn_proyecto_progreso');
+
+        if (DB::connection()->getDriverName() === 'mysql') {
+            DB::unprepared('DROP FUNCTION IF EXISTS fn_proyecto_progreso');
+        }
     }
 };

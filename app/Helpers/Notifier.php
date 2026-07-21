@@ -3,6 +3,7 @@
 namespace App\Helpers;
 
 use App\Models\User;
+use Illuminate\Support\Facades\Cache;
 
 class Notifier
 {
@@ -17,10 +18,6 @@ class Notifier
     {
         $pref = self::$prefMap[$type] ?? null;
 
-        if ($pref && $user->relationLoaded('setting') ? optional($user->setting)->$pref === false : false) {
-            return;
-        }
-
         if ($pref && $user->setting && !$user->setting->$pref) {
             return;
         }
@@ -31,5 +28,7 @@ class Notifier
             'message' => $message,
             'data' => $data ?: null,
         ]);
+
+        Cache::forget('unread_' . $user->id);
     }
 }

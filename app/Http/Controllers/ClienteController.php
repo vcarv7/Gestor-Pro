@@ -7,17 +7,21 @@ use App\Http\Requests\StoreClienteRequest;
 use App\Http\Requests\UpdateClienteRequest;
 use App\Models\Cliente;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class ClienteController extends Controller
 {
-    public function index(): View
+    public function index(Request $request): View
     {
+        $papelera = $request->boolean('papelera');
+
         $clientes = Cliente::where('user_id', auth()->id())
+            ->when($papelera, fn ($q) => $q->onlyTrashed(), fn ($q) => $q->whereNull('deleted_at'))
             ->orderByDesc('created_at')
             ->paginate(10);
 
-        return view('clientes.index', compact('clientes'));
+        return view('clientes.index', compact('clientes', 'papelera'));
     }
 
     public function create(): View
@@ -36,21 +40,21 @@ class ClienteController extends Controller
 
     public function show(Cliente $cliente): View
     {
-        $this->authorizeOwner($cliente);
+        $this->authorize('view', $cliente);
 
         return view('clientes.show', compact('cliente'));
     }
 
     public function edit(Cliente $cliente): View
     {
-        $this->authorizeOwner($cliente);
+        $this->authorize('update', $cliente);
 
         return view('clientes.edit', compact('cliente'));
     }
 
     public function update(UpdateClienteRequest $request, Cliente $cliente): RedirectResponse
     {
-        $this->authorizeOwner($cliente);
+        $this->authorize('update', $cliente);
 
         $cliente->update($request->validated());
 
@@ -61,14 +65,7 @@ class ClienteController extends Controller
 
     public function destroy(Cliente $cliente): RedirectResponse
     {
-        $this->authorizeOwner($cliente);
-
-        if ($cliente->proyectos()->exists()) {
-            $count = $cliente->proyectos()->count();
-            return back()->withErrors([
-                'delete' => "No se puede eliminar el cliente porque tiene {$count} proyecto(s) asociado(s). Elimina o reasigna los proyectos primero.",
-            ]);
-        }
+        $this->authorize('delete', $cliente);
 
         $nombre = $cliente->nombre;
         $cliente->delete();
@@ -77,13 +74,33 @@ class ClienteController extends Controller
 
         return redirect()
             ->route('clientes.index')
-            ->with('status', 'Cliente eliminado.');
+            ->with('status', 'Cliente movido a la papelera.');
     }
 
-    private function authorizeOwner(Cliente $cliente): void
+    public function restore($id): RedirectResponse
     {
-        if ($cliente->user_id !== auth()->id()) {
-            abort(403, 'No tienes permiso para acceder a este cliente.');
-        }
+        $cliente = Cliente::onlyTrashed()->findOrFail($id);
+        $this->authorize('restore', $cliente);
+
+        $cliente->restore();
+
+        return redirect()
+            ->route('clientes.index', ['papelera' => 1])
+            ->with('status', 'Cliente restaurado correctamente.');
+    }
+
+    public function forceDelete($id): RedirectResponse
+    {
+        $cliente = Cliente::onlyTrashed()->findOrFail($id);
+        $this->authorize('forceDelete', $cliente);
+
+        $nombre = $cliente->nombre;
+        $cliente->forceDelete();
+
+        Notifier::notify(auth()->user(), 'cliente_delete', 'Cliente eliminado permanentemente', "Se eliminó permanentemente el cliente: {$nombre}");
+
+        return redirect()
+            ->route('clientes.index', ['papelera' => 1])
+            ->with('status', 'Cliente eliminado permanentemente.');
     }
 }

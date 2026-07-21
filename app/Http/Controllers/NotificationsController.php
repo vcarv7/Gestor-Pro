@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Notification;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\View\View;
 
 class NotificationsController extends Controller
@@ -36,7 +36,9 @@ class NotificationsController extends Controller
                 'created_at' => $n->created_at->toIso8601String(),
             ]);
 
-        $unreadCount = $user->notifications()->unread()->count();
+        $unreadCount = Cache::remember("unread_{$user->id}", 30, function () use ($user) {
+            return $user->notifications()->unread()->count();
+        });
 
         return response()->json([
             'unread_count' => $unreadCount,
@@ -52,6 +54,8 @@ class NotificationsController extends Controller
 
         $notification->update(['read_at' => now()]);
 
+        Cache::forget('unread_' . auth()->id());
+
         return back();
     }
 
@@ -61,6 +65,8 @@ class NotificationsController extends Controller
             ->notifications()
             ->unread()
             ->update(['read_at' => now()]);
+
+        Cache::forget('unread_' . auth()->id());
 
         return back()->with('status', 'Todas las notificaciones marcadas como leídas.');
     }

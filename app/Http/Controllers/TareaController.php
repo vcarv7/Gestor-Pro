@@ -15,20 +15,19 @@ class TareaController extends Controller
 {
     public function index(Proyecto $proyecto): RedirectResponse
     {
-        $this->authorizeProyectoOwner($proyecto);
-        // Las tareas se muestran dentro del show del proyecto, redirigir allí
+        $this->authorize('view', $proyecto);
         return redirect()->route('proyectos.show', $proyecto);
     }
 
     public function create(Proyecto $proyecto): View
     {
-        $this->authorizeProyectoOwner($proyecto);
+        $this->authorize('view', $proyecto);
         return view('tareas.create', compact('proyecto'));
     }
 
     public function store(StoreTareaRequest $request, Proyecto $proyecto): RedirectResponse
     {
-        $this->authorizeProyectoOwner($proyecto);
+        $this->authorize('view', $proyecto);
 
         Tarea::create($request->validated() + [
             'user_id' => auth()->id(),
@@ -40,24 +39,22 @@ class TareaController extends Controller
             ->with('status', 'Tarea creada correctamente.');
     }
 
-    // Rutas shallow: no reciben {proyecto} en la URL, solo {tarea}
-
     public function show(Tarea $tarea): RedirectResponse
     {
-        $this->authorizeTareaOwner($tarea);
+        $this->authorize('view', $tarea);
         return redirect()->route('proyectos.show', $tarea->proyecto_id);
     }
 
     public function edit(Tarea $tarea): View
     {
-        $this->authorizeTareaOwner($tarea);
+        $this->authorize('update', $tarea);
         $proyecto = $tarea->proyecto;
         return view('tareas.edit', compact('proyecto', 'tarea'));
     }
 
     public function update(UpdateTareaRequest $request, Tarea $tarea): RedirectResponse
     {
-        $this->authorizeTareaOwner($tarea);
+        $this->authorize('update', $tarea);
         $tarea->update($request->validated());
         $proyectoId = $tarea->proyecto_id;
 
@@ -68,7 +65,7 @@ class TareaController extends Controller
 
     public function destroy(Tarea $tarea): RedirectResponse
     {
-        $this->authorizeTareaOwner($tarea);
+        $this->authorize('delete', $tarea);
         $proyectoId = $tarea->proyecto_id;
         $titulo = $tarea->nombre;
         $tarea->delete();
@@ -80,11 +77,35 @@ class TareaController extends Controller
             ->with('status', 'Tarea eliminada.');
     }
 
-    // Acciones bulk sobre todas las tareas de un proyecto
+    public function restore($id): RedirectResponse
+    {
+        $tarea = Tarea::onlyTrashed()->findOrFail($id);
+        $this->authorize('restore', $tarea);
+
+        $proyectoId = $tarea->proyecto_id;
+        $tarea->restore();
+
+        return redirect()
+            ->route('proyectos.show', $proyectoId)
+            ->with('status', 'Tarea restaurada.');
+    }
+
+    public function forceDelete($id): RedirectResponse
+    {
+        $tarea = Tarea::onlyTrashed()->findOrFail($id);
+        $this->authorize('forceDelete', $tarea);
+
+        $proyectoId = $tarea->proyecto_id;
+        $tarea->forceDelete();
+
+        return redirect()
+            ->route('proyectos.show', $proyectoId)
+            ->with('status', 'Tarea eliminada permanentemente.');
+    }
 
     public function completeAll(Proyecto $proyecto): RedirectResponse
     {
-        $this->authorizeProyectoOwner($proyecto);
+        $this->authorize('view', $proyecto);
 
         $count = Tarea::where('user_id', auth()->id())
             ->where('proyecto_id', $proyecto->id)
@@ -98,15 +119,17 @@ class TareaController extends Controller
 
     public function destroyAll(Proyecto $proyecto): RedirectResponse
     {
-        $this->authorizeProyectoOwner($proyecto);
+        $this->authorize('view', $proyecto);
 
-        $count = Tarea::where('user_id', auth()->id())
+        $tareas = Tarea::where('user_id', auth()->id())
             ->where('proyecto_id', $proyecto->id)
-            ->count();
+            ->get();
 
-        Tarea::where('user_id', auth()->id())
-            ->where('proyecto_id', $proyecto->id)
-            ->delete();
+        $count = $tareas->count();
+
+        foreach ($tareas as $tarea) {
+            $tarea->delete();
+        }
 
         Actividad::create([
             'user_id' => auth()->id(),
@@ -122,19 +145,5 @@ class TareaController extends Controller
         return redirect()
             ->route('proyectos.show', $proyecto)
             ->with('status', "{$count} tarea(s) eliminada(s).");
-    }
-
-    private function authorizeProyectoOwner(Proyecto $proyecto): void
-    {
-        if ($proyecto->user_id !== auth()->id()) {
-            abort(403, 'No tienes permiso para acceder a este proyecto.');
-        }
-    }
-
-    private function authorizeTareaOwner(Tarea $tarea): void
-    {
-        if ($tarea->user_id !== auth()->id()) {
-            abort(403, 'No tienes permiso para acceder a esta tarea.');
-        }
     }
 }

@@ -7,22 +7,26 @@ use App\Models\Actividad;
 use App\Models\Archivo;
 use App\Models\Proyecto;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class ArchivoAdjuntoController extends Controller
 {
+    private function disk(): string
+    {
+        return config('filesystems.default');
+    }
+
     public function store(StoreArchivoRequest $request, Proyecto $proyecto): RedirectResponse
     {
-        $this->authorizeOwner($proyecto);
+        $this->authorize('view', $proyecto);
 
         $file = $request->file('archivo');
         $uuid = (string) Str::uuid();
         $extension = $file->getClientOriginalExtension();
         $nombreStorage = "{$uuid}.{$extension}";
 
-        $file->storeAs("proyectos/{$proyecto->id}", $nombreStorage, 'r2');
+        $file->storeAs("proyectos/{$proyecto->id}", $nombreStorage, $this->disk());
 
         $archivo = $proyecto->archivos()->create([
             'user_id' => auth()->id(),
@@ -45,29 +49,25 @@ class ArchivoAdjuntoController extends Controller
         return back()->with('status', 'Archivo subido correctamente.');
     }
 
-    public function download(Archivo $archivo): Response
+    public function download(Archivo $archivo)
     {
-        if ($archivo->user_id !== auth()->id()) {
-            abort(403, 'No tienes permiso para descargar este archivo.');
-        }
+        $this->authorize('download', $archivo);
 
         $path = "proyectos/{$archivo->proyecto_id}/{$archivo->nombre_storage}";
 
-        if (! Storage::disk('r2')->exists($path)) {
+        if (! Storage::disk($this->disk())->exists($path)) {
             abort(404, 'El archivo ya no existe en el servidor.');
         }
 
-        return Storage::disk('r2')->download($path, $archivo->nombre_original);
+        return Storage::disk($this->disk())->download($path, $archivo->nombre_original);
     }
 
     public function destroy(Archivo $archivo): RedirectResponse
     {
-        if ($archivo->user_id !== auth()->id()) {
-            abort(403, 'No tienes permiso para eliminar este archivo.');
-        }
+        $this->authorize('delete', $archivo);
 
         $path = "proyectos/{$archivo->proyecto_id}/{$archivo->nombre_storage}";
-        Storage::disk('r2')->delete($path);
+        Storage::disk($this->disk())->delete($path);
 
         $nombreOriginal = $archivo->nombre_original;
         $archivo->delete();
@@ -84,10 +84,28 @@ class ArchivoAdjuntoController extends Controller
         return back()->with('status', 'Archivo eliminado.');
     }
 
-    private function authorizeOwner(Proyecto $proyecto): void
+    public function restore($id): RedirectResponse
     {
-        if ($proyecto->user_id !== auth()->id()) {
-            abort(403, 'No tienes permiso para acceder a este proyecto.');
-        }
+        $archivo = Archivo::onlyTrashed()->findOrFail($id);
+        $this->authorize('restore', $archivo);
+
+        $archivo->restore();
+
+        return redirect()->route('proyectos.show', $archivo->proyecto_id)
+            ->with('status', 'Archivo restaurado.');
+    }
+
+    public function forceDelete($id): RedirectResponse
+    {
+        $archivo = Archivo::onlyTrashed()->findOrFail($id);
+        $this->authorize('forceDelete', $archivo);
+
+        $path = "proyectos/{$archivo->proyecto_id}/{$archivo->nombre_storage}";
+        Storage::disk($this->disk())->delete($path);
+
+        $archivo->forceDelete();
+
+        return redirect()->route('proyectos.show', $archivo->proyecto_id)
+            ->with('status', 'Archivo eliminado permanentemente.');
     }
 }
