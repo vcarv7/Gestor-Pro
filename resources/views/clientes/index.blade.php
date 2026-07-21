@@ -8,7 +8,7 @@
             <div>
                 <h1 class="font-headline-lg text-headline-lg text-on-surface">Clientes</h1>
                 <p class="font-body-md text-body-md text-on-surface-variant mt-xs">
-                    Manage your professional network and contact directory.
+                    Gestioná tu red profesional y directorio de contactos.
                 </p>
             </div>
             <a href="{{ route('clientes.create') }}"

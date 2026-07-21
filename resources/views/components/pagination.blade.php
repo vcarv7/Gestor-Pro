@@ -1,16 +1,15 @@
-@props([
-    'current' => 1,
-    'last' => 1,
-    'total' => 0,
-    'perPage' => 10,
-    'label' => 'registros',
-])
+@props(['paginator'])
 
 @php
+    $current = $paginator->currentPage();
+    $last = $paginator->lastPage();
+    $total = $paginator->total();
+    $perPage = $paginator->perPage();
+    $label = 'registros';
+
     $showingFrom = $total > 0 ? (($current - 1) * $perPage) + 1 : 0;
     $showingTo = min($current * $perPage, $total);
 
-    // Generar páginas visibles: primera, ..., actual-1, actual, actual+1, ..., última
     $pages = [];
     if ($last <= 7) {
         $pages = range(1, $last);
@@ -32,30 +31,39 @@
 
     <div class="flex items-center gap-xs">
 
-        {{-- Previous --}}
-        <button @disabled($current <= 1)
-            class="w-9 h-9 flex items-center justify-center rounded-md border border-outline-variant text-on-surface-variant hover:bg-surface-container disabled:opacity-30 disabled:cursor-not-allowed transition-colors">
-            <span class="material-symbols-outlined text-[18px]">chevron_left</span>
-        </button>
+        @if ($current > 1)
+            <a href="{{ $paginator->url($current - 1) }}"
+                class="w-9 h-9 flex items-center justify-center rounded-md border border-outline-variant text-on-surface-variant hover:bg-surface-container transition-colors">
+                <span class="material-symbols-outlined text-[18px]">chevron_left</span>
+            </a>
+        @else
+            <span class="w-9 h-9 flex items-center justify-center rounded-md border border-outline-variant text-on-surface-variant opacity-30 cursor-not-allowed">
+                <span class="material-symbols-outlined text-[18px]">chevron_left</span>
+            </span>
+        @endif
 
-        {{-- Page numbers --}}
         @foreach ($pages as $page)
             @if ($page === '...')
                 <span class="w-9 h-9 flex items-center justify-center font-body-sm text-on-surface-variant">…</span>
             @else
-                <button
+                <a href="{{ $paginator->url($page) }}"
                     class="min-w-9 h-9 px-sm flex items-center justify-center rounded-md font-body-sm transition-colors
                     {{ $page === $current ? 'bg-primary text-on-primary' : 'text-on-surface-variant hover:bg-surface-container' }}">
                     {{ $page }}
-                </button>
+                </a>
             @endif
         @endforeach
 
-        {{-- Next --}}
-        <button @disabled($current >= $last)
-            class="w-9 h-9 flex items-center justify-center rounded-md border border-outline-variant text-on-surface-variant hover:bg-surface-container disabled:opacity-30 disabled:cursor-not-allowed transition-colors">
-            <span class="material-symbols-outlined text-[18px]">chevron_right</span>
-        </button>
+        @if ($current < $last)
+            <a href="{{ $paginator->url($current + 1) }}"
+                class="w-9 h-9 flex items-center justify-center rounded-md border border-outline-variant text-on-surface-variant hover:bg-surface-container transition-colors">
+                <span class="material-symbols-outlined text-[18px]">chevron_right</span>
+            </a>
+        @else
+            <span class="w-9 h-9 flex items-center justify-center rounded-md border border-outline-variant text-on-surface-variant opacity-30 cursor-not-allowed">
+                <span class="material-symbols-outlined text-[18px]">chevron_right</span>
+            </span>
+        @endif
 
     </div>
 </div>

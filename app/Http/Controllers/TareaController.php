@@ -9,8 +9,6 @@ use App\Models\Actividad;
 use App\Models\Proyecto;
 use App\Models\Tarea;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
 class TareaController extends Controller
@@ -44,6 +42,12 @@ class TareaController extends Controller
 
     // Rutas shallow: no reciben {proyecto} en la URL, solo {tarea}
 
+    public function show(Tarea $tarea): RedirectResponse
+    {
+        $this->authorizeTareaOwner($tarea);
+        return redirect()->route('proyectos.show', $tarea->proyecto_id);
+    }
+
     public function edit(Tarea $tarea): View
     {
         $this->authorizeTareaOwner($tarea);
@@ -60,15 +64,6 @@ class TareaController extends Controller
         return redirect()
             ->route('proyectos.show', $proyectoId)
             ->with('status', 'Tarea actualizada correctamente.');
-    }
-
-    public function update_completada(Request $request, Tarea $tarea): RedirectResponse
-    {
-        $this->authorizeTareaOwner($tarea);
-        $tarea->update(['completada' => $request->boolean('completada')]);
-        $proyectoId = $tarea->proyecto_id;
-
-        return back()->with('status', $tarea->completada ? 'Tarea completada.' : 'Tarea marcada como pendiente.');
     }
 
     public function destroy(Tarea $tarea): RedirectResponse
